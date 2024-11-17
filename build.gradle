@@ -1,0 +1,31 @@
+plugins {
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.0.14'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
+
+    implementation "org.openjfx:javafx-controls:22.0.1"
+    implementation "org.openjfx:javafx-fxml:22.0.1"
+    implementation "org.openjfx:javafx-base:22.0.1"
+
+    implementation 'ch.qos.logback:logback-classic:1.4.14'
+    implementation 'org.slf4j:slf4j-api:2.0.16'
+
+}
+
+javafx {
+    version = "22.0.1"
+    modules = [ 'javafx.controls', 'javafx.fxml' ]
+}
+
+application {
+    mainClass = 'hr.nik.Main' // Replace with the fully qualified name of your main class
+}
