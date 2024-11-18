@@ -15,21 +15,27 @@ public enum LangtonAntDirection {
 
     private final double degrees;
 
-    public LangtonAntDirection nextDirection(boolean activeCell) {
-        switch (this) {
-            case NORTH -> {
-                return activeCell ? WEST : EAST;
+    public LangtonAntDirection nextDirection(LangtonAntTile tile) {
+        double newDegrees = (this.degrees + tile.getTurnDegrees() + 360) % 360;
+        return fromDegrees(newDegrees);
+    }
+
+    public static LangtonAntDirection fromDegrees(double degrees) {
+        switch ((int) degrees) {
+            case 0 -> {
+                return NORTH;
             }
-            case EAST -> {
-                return activeCell ? NORTH : SOUTH;
+            case 90 -> {
+                return EAST;
             }
-            case SOUTH -> {
-                return activeCell ? EAST : WEST;
+            case 180 -> {
+                return SOUTH;
             }
-            case WEST -> {
-                return activeCell ? SOUTH : NORTH;
+            case 270 -> {
+                return WEST;
             }
-            default -> throw new RuntimeException();
+            default -> throw new RuntimeException(String.format("Unexpected %s degrees", degrees));
         }
     }
+
 }

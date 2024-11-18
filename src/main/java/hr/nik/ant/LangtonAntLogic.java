@@ -1,11 +1,9 @@
 package hr.nik.ant;
 
 import hr.nik.model.Coordinates;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 public class LangtonAntLogic {
@@ -13,9 +11,11 @@ public class LangtonAntLogic {
     private final int NUMBER_OF_COLUMNS;
     private final int NUMBER_OF_ROWS;
 
-    private final Map<Integer, Map<Integer, Boolean>> cells = new HashMap<>();
+    private List<LangtonAntTile> tiles;
 
-    @Getter
+    // row, column, tileIndex
+    private final Map<Integer, Map<Integer, Integer>> cells = new HashMap<>();
+
     private LangtonAntState antState;
 
     public LangtonAntLogic(int gridSizeX, int gridSizeY) {
@@ -23,19 +23,33 @@ public class LangtonAntLogic {
         NUMBER_OF_ROWS = gridSizeY;
     }
 
-    public void init() {
+    public void init(String rules) {
+
+        tiles = new ArrayList<>();
+
+        char[] patternCharArray = rules.trim().toUpperCase().toCharArray();
+        for (int i = 0; i < patternCharArray.length; i++) {
+            char c = patternCharArray[i];
+            switch (c) {
+                case 'L' -> tiles.add(new LangtonAntTile("L" + i, -90));
+                case 'R' -> tiles.add(new LangtonAntTile("R" + i, 90));
+                case 'C' -> tiles.add(new LangtonAntTile("C" + i, 180));
+                case 'U' -> tiles.add(new LangtonAntTile("U" + i, 0));
+                default -> throw new RuntimeException("Pattern letters must be L,R,C or U");
+            }
+        }
 
         for (int rowIndex = 0; rowIndex < NUMBER_OF_ROWS; rowIndex++) {
             cells.put(rowIndex, new HashMap<>());
             for (int colIndex = 0; colIndex < NUMBER_OF_COLUMNS; colIndex++) {
-                cells.get(rowIndex).put(colIndex, false);
+                cells.get(rowIndex).put(colIndex, 0);
             }
         }
 
         // We'll put him mor to the top left if it's clear grid and he's facing west
         antState = LangtonAntState.of(
                 LangtonAntDirection.WEST,
-                new Coordinates<>(40,40));
+                new Coordinates<>(NUMBER_OF_COLUMNS / 3,NUMBER_OF_ROWS / 2));
 
     }
 
@@ -45,17 +59,17 @@ public class LangtonAntLogic {
         int currentCol = antState.getCoordinates().getX();
 
         // Get current cell
-        boolean activeCell = cells.get(currentRow).get(currentCol);
+        int currentTileIndex = cells.get(currentRow).get(currentCol);
 
         // Reposition direction based on current cell state
-        LangtonAntDirection newDirection = antState.getDirection().nextDirection(activeCell);
+        LangtonAntDirection newDirection = antState.getDirection().nextDirection(tiles.get(currentTileIndex));
 
         // Toggle current cell state
-        cells.get(currentRow).put(currentCol, !activeCell);
-
+        int nextTileIndex = (currentTileIndex + 1) % tiles.size();
+        cells.get(currentRow).put(currentCol, nextTileIndex);
 
         // Take a step with an ant
-        // TODO refaktoriraj ovo...
+        // TODO refactor...
         switch (newDirection) {
             case NORTH -> antState = LangtonAntState.of(LangtonAntDirection.NORTH, new Coordinates<>(currentCol, currentRow - 1));
             case EAST -> antState = LangtonAntState.of(LangtonAntDirection.EAST, new Coordinates<>(currentCol + 1, currentRow));
@@ -66,8 +80,15 @@ public class LangtonAntLogic {
 
     }
 
-    public boolean isAlive(int row, int col) {
+    public int getTileIndex(int row, int col) {
         return cells.get(row).get(col);
     }
 
+    public Coordinates<Integer> getCurrentStateCoordinates() {
+        return antState.getCoordinates();
+    }
+
+    public double getCurrentStateDirectionDegrees() {
+        return antState.getDirection().getDegrees();
+    }
 }

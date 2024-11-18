@@ -11,31 +11,40 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Polygon;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Arrays;
+import java.util.List;
 
 @Slf4j
 public class LangtonAntSceneBuilder extends SceneBuilder {
 
-    private static final int GRID_SIZE_X = 256;
-    private static final int GRID_SIZE_Y = 256;
+    private static final int GRID_SIZE_X = 768;
+    private static final int GRID_SIZE_Y = 384;
 
     private static LangtonAntLogic antLogic;
 
-    private static final double RECT_SIZE = 5;
+    private static final double RECT_SIZE = 3;
     private static final double RECT_BORDER_WIDTH = 0;
     private static final double RECT_TOTAL_SIZE = RECT_SIZE + RECT_BORDER_WIDTH;
+
+    private String antRules;
+    private TextField antRulesInput;
 
     private double timerDuration;
     private TextField timerDurationInput;
     private boolean timerPlaying;
 
     private AnimationTimer timer;
+
+    private long counter;
+    private Label counterLabel;
 
     private GraphicsContext gc;
 
@@ -46,14 +55,13 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
     @Override
     public Scene build() {
 
+        // Classical rules are default (2 types of tiles, turn left / turn right)
+        antRules = "RL";
+
         antLogic = new LangtonAntLogic(GRID_SIZE_X, GRID_SIZE_Y);
-        antLogic.init();
+        antLogic.init(antRules);
 
-        timerDuration = 75;
-
-        timerDurationInput = new TextField();
-        timerDurationInput.setPrefWidth(150);
-        timerDurationInput.setPromptText("" + timerDuration);
+        timerDuration = 25;
 
         timer = new AnimationTimer() {
             long lastUpdate = 0;
@@ -90,6 +98,8 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
                 stepButton(),
                 timerDurationInput(),
                 timerDurationButton(),
+                antRulesInput(),
+                counterLabel(),
                 welcomeScreenButton()
         );
     }
@@ -118,6 +128,9 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
     }
 
     private Node timerDurationInput() {
+        timerDurationInput = new TextField();
+        timerDurationInput.setPrefWidth(150);
+        timerDurationInput.setPromptText("" + timerDuration);
         return onTextInputEnter(timerDurationInput, this::onTimerDurationInputSubmit);
     }
 
@@ -130,8 +143,8 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
         Integer msDuration = null;
         try {
             int intInput = Integer.parseInt(input);
-            if (intInput < 20 || intInput > 20_000) {
-                showAlertError("Frequency must be between 20ms and 20000ms.");
+            if (intInput < 10 || intInput > 30_000) {
+                showAlertError("Frequency must be between 10ms and 30000ms.");
             } else {
                 msDuration = intInput;
             }
@@ -150,6 +163,40 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
                 timerPlaying = true;
             }
         }
+    }
+
+    private Node antRulesInput() {
+        antRulesInput = new TextField();
+        antRulesInput.setPrefWidth(250);
+        antRulesInput.setPromptText("" + antRules);
+        return onTextInputEnter(antRulesInput, this::onAntRulesInputSubmit);
+    }
+
+    private void onAntRulesInputSubmit() {
+        String input = antRulesInput.getText();
+        if (input == null) {
+            return;
+        }
+
+        input = input.replaceAll("\\s+", "");
+
+        if (!input.matches("^[LRCUlrcu]+$")) {
+            showAlertError("Ant rules must be letters LRCU (or lrcu)");
+        }
+
+        if (input.length() > CELL_COLORS.size()) {
+            showAlertError("Max number of rules is " + CELL_COLORS.size());
+        }
+
+        this.antRules = input;
+        antLogic.init(antRules);
+        drawGrid(gc);
+
+    }
+
+    private Label counterLabel() {
+        counterLabel = new Label("Counter: " + counter);
+        return counterLabel;
     }
 
     private Button welcomeScreenButton() {
@@ -177,6 +224,8 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
         long milli = System.currentTimeMillis();
         antLogic.evolve();
         drawGrid(gc);
+        counter++;
+        counterLabel.setText("Counter: " + counter);
         log.debug("Evolved in {}ms", System.currentTimeMillis()- milli);
     }
 
@@ -195,38 +244,67 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
 
     }
 
+    private static final List<Color> CELL_COLORS = Arrays.asList(
+            Color.WHEAT,
+            Color.DARKGREEN,
+            Color.DARKORANGE,
+            Color.DARKBLUE,
+            Color.STEELBLUE,
+            Color.BLACK,
+            Color.CORAL,
+            Color.CRIMSON,
+            Color.AQUA,
+            Color.FUCHSIA,
+            Color.YELLOWGREEN,
+            Color.VIOLET,
+            Color.TAN,
+            Color.TEAL
+    );
+
     private void drawCell(GraphicsContext gc, int col, int row) {
 
         double x = col * RECT_TOTAL_SIZE;
         double y = row * RECT_TOTAL_SIZE;
 
         // Draw cell background
-        gc.setFill(antLogic.isAlive(row, col) ? Color.DARKGREEN : Color.WHEAT);
-        gc.fillRect(x, y, RECT_SIZE, RECT_SIZE);
+
+        gc.setFill(CELL_COLORS.get(antLogic.getTileIndex(row, col)));
+//        gc.fillRect(x, y, RECT_SIZE, RECT_SIZE);
+        gc.fillRoundRect(x, y, RECT_SIZE, RECT_SIZE, RECT_SIZE/2, RECT_SIZE/2);
 
     }
 
     private void drawAnt(GraphicsContext gc) {
 
-        Polygon ant = new Polygon();
-        ant.getPoints().addAll(
-                -10.0, 0.0,  // Left side of arrowhead
-                10.0, 0.0,   // Right side of arrowhead
-                0.0, -20.0   // Tip of the arrow
-        );
+        Coordinates<Integer> antCellCoordinates = antLogic.getCurrentStateCoordinates();
+        double degrees = antLogic.getCurrentStateDirectionDegrees();
 
-        Coordinates<Integer> coordinates = antLogic.getAntState().getCoordinates();
-        double centerX = coordinates.getX() * RECT_TOTAL_SIZE + (RECT_TOTAL_SIZE / 2);
-        double centerY = coordinates.getY() * RECT_TOTAL_SIZE + (RECT_TOTAL_SIZE / 2);
+        Coordinates<Double> t1 = new Coordinates<>(antCellCoordinates.getX() * RECT_TOTAL_SIZE, (antCellCoordinates.getY() + 1) * RECT_TOTAL_SIZE);
+        Coordinates<Double> t2 = new Coordinates<>((antCellCoordinates.getX() + 1) * RECT_TOTAL_SIZE, (antCellCoordinates.getY() + 1) * RECT_TOTAL_SIZE);
+        Coordinates<Double> t3 = new Coordinates<>((antCellCoordinates.getX() + 0.5) * RECT_TOTAL_SIZE , (antCellCoordinates.getY() + 0.5) * RECT_TOTAL_SIZE);
 
-        ant.setTranslateX(centerX);
-        ant.setTranslateY(centerY);
+        // Save current transformation state
+        gc.save();
+        gc.translate((antCellCoordinates.getX() + 0.5) * RECT_TOTAL_SIZE, (antCellCoordinates.getY() + 0.5) * RECT_TOTAL_SIZE);
+        gc.rotate(degrees);
+        gc.translate(- (antCellCoordinates.getX() + 0.5) * RECT_TOTAL_SIZE, - (antCellCoordinates.getY() + 0.5) * RECT_TOTAL_SIZE);
 
-        ant.setRotate(antLogic.getAntState().getDirection().getDegrees());
+        drawTriangle(gc, t1, t2, t3);
 
+        // Restore previous state to avoid affecting other drawings
+        gc.restore();
+
+
+    }
+
+    private void drawTriangle(GraphicsContext gc, Coordinates<Double> t1, Coordinates<Double> t2 , Coordinates<Double> t3) {
         gc.setFill(Color.RED);
+        gc.beginPath();
+        gc.moveTo(t1.getX(), t1.getY()); // First vertex
+        gc.lineTo(t2.getX(), t2.getY()); // Second vertex
+        gc.lineTo(t3.getX(), t3.getY()); // Third vertex
+        gc.closePath();
         gc.fill();
-
     }
 
 }

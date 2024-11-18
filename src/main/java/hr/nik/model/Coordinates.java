@@ -3,6 +3,9 @@ package hr.nik.model;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
 @Getter
 @EqualsAndHashCode
 public class Coordinates<T extends Number> {
