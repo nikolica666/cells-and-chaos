@@ -5,7 +5,6 @@ import hr.nik.SceneBuilder;
 import hr.nik.ant.LangtonAntSceneBuilder;
 import hr.nik.ca.CellularAutomataSceneBuilder;
 import hr.nik.gol.GolSceneBuilder;
-import hr.nik.gol.GolOldSceneBuilder;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -22,7 +21,6 @@ public class WelcomeSceneBuilder extends SceneBuilder {
 
         HBox box = horizontalMenu(
                 gameOfLifeButton(),
-                oldGameOfLifeButton(),
                 cellularAutomataButton(),
                 langtonAntButton()
         );
@@ -37,12 +35,6 @@ public class WelcomeSceneBuilder extends SceneBuilder {
         return createButton(
                 "Game of Life",
                 e -> createScene(() -> new GolSceneBuilder(main)));
-    }
-
-    private Button oldGameOfLifeButton() {
-        return createButton(
-                "Game of Life (old)",
-                e -> createScene(() -> new GolOldSceneBuilder(main)));
     }
 
     private Button cellularAutomataButton() {

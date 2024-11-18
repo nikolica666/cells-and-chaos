@@ -12,28 +12,27 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
-import javafx.scene.effect.GaussianBlur;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.util.Duration;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class GolSceneBuilder extends SceneBuilder {
 
-    private static final int GRID_SIZE_X = 64;
-    private static final int GRID_SIZE_Y = 32;
+    private static final int GRID_SIZE_X = 128;
+    private static final int GRID_SIZE_Y = 80;
 
     private static GolLogic golLogic;
 
-    private static final double RECT_SIZE = (double) 32;
-    private static final double RECT_BORDER_WIDTH = 1;
+    private static final double RECT_SIZE = 12;
+    private static final double RECT_BORDER_WIDTH = 2;
     private static final double RECT_TOTAL_SIZE = RECT_SIZE + RECT_BORDER_WIDTH;
 
-    private final boolean[][] cells = new boolean[GRID_SIZE_Y][GRID_SIZE_X];
-    private int lastToggledRow;
-    private int lastToggledCol;
+    private int lastToggledScreenRow;
+    private int lastToggledScreenCol;
 
     private TextField timelineDurationInput;
     private Timeline timeline;
@@ -47,7 +46,7 @@ public class GolSceneBuilder extends SceneBuilder {
 
     public Scene build() {
 
-        golLogic = new GolLogic(GRID_SIZE_X, GRID_SIZE_Y);
+        golLogic = new GolLogic(GRID_SIZE_X, GRID_SIZE_Y, new GolClassicRules());
 
         double initialTimerDuration = 175;
 
@@ -76,19 +75,18 @@ public class GolSceneBuilder extends SceneBuilder {
     }
 
     private void evolve() {
-        // Calculate what is next state
         for (int row = 0; row < GRID_SIZE_Y; row++) {
             for (int col = 0; col < GRID_SIZE_X; col++) {
-                golLogic.calculateNextState(row, col);
+                GolCellState nextState = golLogic.calculateAndSetNextState(row, col);
             }
         }
-        // Set next state, now that we iterated through all cells
+
         for (int row = 0; row < GRID_SIZE_Y; row++) {
             for (int col = 0; col < GRID_SIZE_X; col++) {
-                boolean aliveNextState = golLogic.setAndReturnNextState(row, col);
-                cells[row][col] = aliveNextState;
+                golLogic.findCell(row, col).setCurrentStateToNextStateValue();
             }
         }
+
     }
 
     private Node mainMenu() {
@@ -147,8 +145,11 @@ public class GolSceneBuilder extends SceneBuilder {
     }
 
     private void clearState(int row, int col) {
-        golLogic.clearGolCell(row, col);
-        cells[row][col] = false;
+
+        GolCellState clearState = GolCellState.DEAD;
+
+        golLogic.setCellCurrentState(row, col, clearState);
+
     }
 
     private Node timelineDurationInput() {
@@ -217,10 +218,19 @@ public class GolSceneBuilder extends SceneBuilder {
         int row = (int)(e.getY() / RECT_TOTAL_SIZE);
 
         if (col >= 0 && col < GRID_SIZE_X && row >= 0 && row < GRID_SIZE_Y) {
-            cells[row][col] = !cells[row][col];
-            drawCell(gc, col, row);
-            lastToggledRow = row;
-            lastToggledCol = col;
+
+            // We set "next enum" when mouse is clicked on screen
+            GolCellState newCurrentState = golLogic.findCell(row, col).getCurrentState().next();
+
+            // Set new current state to logical cell
+            GolCell cell = golLogic.findCell(row, col);
+            cell.setCurrentState(newCurrentState);
+
+            drawCell(gc, cell);
+
+            lastToggledScreenRow = row;
+            lastToggledScreenCol = col;
+
         }
 
     }
@@ -231,11 +241,19 @@ public class GolSceneBuilder extends SceneBuilder {
         int row = (int)(e.getY() / RECT_TOTAL_SIZE);
 
         if (col >= 0 && col < GRID_SIZE_X && row >= 0 && row < GRID_SIZE_Y) {
-            if (lastToggledRow != row || lastToggledCol != col) {
-                cells[row][col] = !cells[row][col];
-                drawCell(gc, col, row);
-                lastToggledRow = row;
-                lastToggledCol = col;
+            if (lastToggledScreenRow != row || lastToggledScreenCol != col) {
+
+                // We set "next enum" when mouse is dragged on screen
+                GolCellState newCurrentState = golLogic.findCell(row, col).getCurrentState().next();
+
+                // Set new current state to logical cell
+                golLogic.setCellCurrentState(row, col, newCurrentState);
+
+                drawCell(gc, golLogic.findCell(row, col));
+
+                lastToggledScreenRow = row;
+                lastToggledScreenCol = col;
+
             }
         }
 
@@ -243,11 +261,14 @@ public class GolSceneBuilder extends SceneBuilder {
 
     private void drawGrid(GraphicsContext gc) {
 
-        gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
+        //gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
 
         for (int row = 0; row < GRID_SIZE_Y; row++) {
             for (int col = 0; col < GRID_SIZE_X; col++) {
-                drawCell(gc, col, row);
+                GolCell cell = golLogic.findCellSetDeadIfAbsent(row, col);
+                if (cell.isStateChanged()) {
+                    drawCell(gc, cell);
+                }
             }
         }
 
@@ -256,22 +277,33 @@ public class GolSceneBuilder extends SceneBuilder {
 
     }
 
-    private void drawCell(GraphicsContext gc, int col, int row) {
+    private void drawCell(GraphicsContext gc, GolCell cell) {
 
-        double x = col * RECT_TOTAL_SIZE;
-        double y = row * RECT_TOTAL_SIZE;
+        log.trace("Drawing cell {}", cell);
 
-        boolean alive = cells[row][col];
+        double x = cell.getCoordinates().getX() * RECT_TOTAL_SIZE;
+        double y = cell.getCoordinates().getY() * RECT_TOTAL_SIZE;
+
+        GolCellState currentState = cell.getCurrentState();
 
         // Draw cell background
-        gc.setFill(alive ? Color.DARKGREEN : Color.WHEAT);
+        gc.setFill(setFillBasedOnCellState(currentState));
         gc.fillRect(x, y, RECT_SIZE, RECT_SIZE);
 //        gc.fillOval(x, y, RECT_SIZE, RECT_SIZE);
 //        gc.fillRoundRect(x, y, RECT_SIZE, RECT_SIZE, 25 , 25);
 
-        // TODO refaktorirati ovo...
-        golLogic.setCell(row, col, alive);
+    }
 
+    private Paint setFillBasedOnCellState(GolCellState state) {
+        switch (state) {
+            case ALIVE -> {
+                return Color.DARKGREEN;
+            }
+            case DEAD -> {
+                return Color.WHEAT;
+            }
+            default -> throw new RuntimeException("Cannot set fill color for unexpected state " + state);
+        }
     }
 
 }

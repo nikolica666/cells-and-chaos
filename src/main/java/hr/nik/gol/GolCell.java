@@ -4,40 +4,47 @@ import hr.nik.model.Coordinates;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @EqualsAndHashCode(of = {"coordinates"})
+@ToString
 public class GolCell {
 
-    @Setter private boolean alive;
-    @Setter private boolean aliveNext;
+    private GolCellState currentState;
+    @Setter private GolCellState nextState;
+
+    private boolean stateChanged;
 
     private final Coordinates<Integer> coordinates;
 
-    public GolCell(Coordinates<Integer> coordinates, boolean alive) {
+    private GolCell(Coordinates<Integer> coordinates, GolCellState state) {
         this.coordinates = coordinates;
-        this.alive = alive;
+        this.setCurrentState(state); // Reusing setter, there is logic in it
     }
 
-    public static GolCell createDead(Coordinates<Integer> coordinates) {
-        return create(coordinates, false);
+    public static GolCell create(Coordinates<Integer> coordinates, GolCellState currentState) {
+        return new GolCell(coordinates, currentState);
     }
 
-    public static GolCell create(Coordinates<Integer> coordinates, boolean isAlive) {
-        return new GolCell(coordinates, isAlive);
+    public void setCurrentStateToNextStateValue() {
+
+        if (nextState != currentState) {
+            currentState = nextState;
+            stateChanged = true;
+        } else {
+            stateChanged = false;
+        }
+
     }
 
-    public void toggleAlive() {
-        this.alive = !this.alive;
-    }
-
-    public boolean setAndReturnNextState() {
-        this.alive = this.aliveNext;
-        return this.alive;
-    }
-
-    public void clear() {
-        this.alive = false;
+    public void setCurrentState(GolCellState currentState) {
+        if (this.currentState != currentState) {
+            this.currentState = currentState;
+            stateChanged = true;
+        } else {
+            stateChanged = false;
+        }
     }
 
 }
