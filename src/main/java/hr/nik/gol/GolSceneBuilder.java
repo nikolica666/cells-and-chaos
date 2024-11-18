@@ -22,13 +22,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GolSceneBuilder extends SceneBuilder {
 
-    private static final int GRID_SIZE_X = 128;
-    private static final int GRID_SIZE_Y = 80;
+    private static final int GRID_SIZE_X = 256;
+    private static final int GRID_SIZE_Y = 128;
 
     private static GolLogic golLogic;
 
-    private static final double RECT_SIZE = 12;
-    private static final double RECT_BORDER_WIDTH = 2;
+    private static final double RECT_SIZE = 5;
+    private static final double RECT_BORDER_WIDTH = 1;
     private static final double RECT_TOTAL_SIZE = RECT_SIZE + RECT_BORDER_WIDTH;
 
     private int lastToggledScreenRow;
@@ -261,7 +261,7 @@ public class GolSceneBuilder extends SceneBuilder {
 
     private void drawGrid(GraphicsContext gc) {
 
-        //gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
+        // gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
 
         for (int row = 0; row < GRID_SIZE_Y; row++) {
             for (int col = 0; col < GRID_SIZE_X; col++) {
