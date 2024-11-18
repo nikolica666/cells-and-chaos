@@ -12,6 +12,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.effect.GaussianBlur;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -21,12 +22,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GolSceneBuilder extends SceneBuilder {
 
-    private static final int GRID_SIZE_X = 256;
-    private static final int GRID_SIZE_Y = 128;
+    private static final int GRID_SIZE_X = 64;
+    private static final int GRID_SIZE_Y = 32;
 
     private static GolLogic golLogic;
 
-    private static final double RECT_SIZE = (double) 12;
+    private static final double RECT_SIZE = (double) 32;
     private static final double RECT_BORDER_WIDTH = 1;
     private static final double RECT_TOTAL_SIZE = RECT_SIZE + RECT_BORDER_WIDTH;
 
@@ -250,6 +251,9 @@ public class GolSceneBuilder extends SceneBuilder {
             }
         }
 
+//        GaussianBlur blur = new GaussianBlur(3);
+//        gc.getCanvas().setEffect(blur);
+
     }
 
     private void drawCell(GraphicsContext gc, int col, int row) {
@@ -262,6 +266,8 @@ public class GolSceneBuilder extends SceneBuilder {
         // Draw cell background
         gc.setFill(alive ? Color.DARKGREEN : Color.WHEAT);
         gc.fillRect(x, y, RECT_SIZE, RECT_SIZE);
+//        gc.fillOval(x, y, RECT_SIZE, RECT_SIZE);
+//        gc.fillRoundRect(x, y, RECT_SIZE, RECT_SIZE, 25 , 25);
 
         // TODO refaktorirati ovo...
         golLogic.setCell(row, col, alive);

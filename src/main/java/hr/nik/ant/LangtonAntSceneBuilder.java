@@ -13,6 +13,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.effect.GaussianBlur;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -25,12 +26,12 @@ import java.util.List;
 @Slf4j
 public class LangtonAntSceneBuilder extends SceneBuilder {
 
-    private static final int GRID_SIZE_X = 768;
-    private static final int GRID_SIZE_Y = 384;
+    private static final int GRID_SIZE_X = 256;
+    private static final int GRID_SIZE_Y = 128;
 
     private static LangtonAntLogic antLogic;
 
-    private static final double RECT_SIZE = 3;
+    private static final double RECT_SIZE = 8;
     private static final double RECT_BORDER_WIDTH = 0;
     private static final double RECT_TOTAL_SIZE = RECT_SIZE + RECT_BORDER_WIDTH;
 
@@ -242,6 +243,9 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
 
         drawAnt(gc);
 
+//        GaussianBlur blur = new GaussianBlur(3);
+//        gc.getCanvas().setEffect(blur);
+
     }
 
     private static final List<Color> CELL_COLORS = Arrays.asList(
@@ -270,7 +274,8 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
 
         gc.setFill(CELL_COLORS.get(antLogic.getTileIndex(row, col)));
 //        gc.fillRect(x, y, RECT_SIZE, RECT_SIZE);
-        gc.fillRoundRect(x, y, RECT_SIZE, RECT_SIZE, RECT_SIZE/2, RECT_SIZE/2);
+//        gc.fillRoundRect(x, y, RECT_SIZE, RECT_SIZE, RECT_SIZE/2, RECT_SIZE/2);
+        gc.fillOval(x, y, RECT_SIZE - 2, RECT_SIZE - 2);
 
     }
 

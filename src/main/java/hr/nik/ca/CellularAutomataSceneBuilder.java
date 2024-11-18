@@ -11,6 +11,10 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.GaussianBlur;
+import javafx.scene.effect.MotionBlur;
+import javafx.scene.effect.SepiaTone;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -23,7 +27,7 @@ import java.util.Random;
 public class CellularAutomataSceneBuilder extends SceneBuilder {
 
     private static final int GRID_SIZE_X = 128;
-    private static final int GRID_SIZE_Y = 32;
+    private static final int GRID_SIZE_Y = 64;
 
     private static CellularAutomataLogic caLogic;
 
@@ -54,7 +58,7 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
         caLogic = new CellularAutomataLogic(GRID_SIZE_X, GRID_SIZE_Y);
         caLogic.init(rule);
 
-        timeLineDuration = 75;
+        timeLineDuration = 20;
 
         timelineDurationInput = new TextField();
         timelineDurationInput.setPrefWidth(150);
@@ -140,8 +144,8 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
         Integer msDuration = null;
         try {
             int intInput = Integer.parseInt(input);
-            if (intInput < 30 || intInput > 30_000) {
-                showAlertError("Frequency must be between 30ms and 30000ms.");
+            if (intInput < 20 || intInput > 30_000) {
+                showAlertError("Frequency must be between 20ms and 30000ms.");
             } else {
                 msDuration = intInput;
             }
@@ -221,6 +225,7 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
                 drawCell(gc, col, row);
             }
         }
+
     }
 
     private void drawCell(GraphicsContext gc, int col, int row) {
