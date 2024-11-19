@@ -1,14 +1,12 @@
 package hr.nik.gol;
 
+import hr.nik.gol.model.GolCell;
+import hr.nik.gol.model.GolCellState;
+import hr.nik.gol.rules.GolRules;
 import hr.nik.model.Coordinates;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class GolLogic {

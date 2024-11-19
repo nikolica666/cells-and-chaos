@@ -2,6 +2,9 @@ package hr.nik.gol;
 
 import hr.nik.Main;
 import hr.nik.SceneBuilder;
+import hr.nik.gol.model.GolCell;
+import hr.nik.gol.model.GolCellState;
+import hr.nik.gol.rules.*;
 import hr.nik.welcome.WelcomeSceneBuilder;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -19,6 +22,9 @@ import javafx.scene.paint.Paint;
 import javafx.util.Duration;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
+import java.util.Set;
+
 @Slf4j
 public class GolSceneBuilder extends SceneBuilder {
 
@@ -27,7 +33,7 @@ public class GolSceneBuilder extends SceneBuilder {
 
     private static GolLogic golLogic;
 
-    private static final double RECT_SIZE = 5;
+    private static final double RECT_SIZE = 7;
     private static final double RECT_BORDER_WIDTH = 1;
     private static final double RECT_TOTAL_SIZE = RECT_SIZE + RECT_BORDER_WIDTH;
 
@@ -45,8 +51,15 @@ public class GolSceneBuilder extends SceneBuilder {
     }
 
     public Scene build() {
+        // B35678/S5678
+        golLogic = new GolLogic(
+                GRID_SIZE_X,
+                GRID_SIZE_Y,
+                new GolCustomRules(
+                        Set.of(3,5,6,7,8),
+                        Set.of(5,6,7,8)));
 
-        golLogic = new GolLogic(GRID_SIZE_X, GRID_SIZE_Y, new GolClassicRules());
+        golLogic = new GolLogic(GRID_SIZE_X, GRID_SIZE_Y, new GolCustomRules("B3/S23"));
 
         double initialTimerDuration = 175;
 

@@ -1,4 +1,4 @@
-package hr.nik.gol;
+package hr.nik.gol.model;
 
 import hr.nik.model.Coordinates;
 import lombok.EqualsAndHashCode;

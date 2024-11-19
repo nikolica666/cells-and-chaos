@@ -1,4 +1,4 @@
-package hr.nik.gol;
+package hr.nik.gol.model;
 
 public enum GolCellState {
     DEAD,
