@@ -16,24 +16,25 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.transform.Scale;
 import javafx.util.Duration;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Arrays;
 import java.util.Set;
 
 @Slf4j
 public class GolSceneBuilder extends SceneBuilder {
 
-    private static final int GRID_SIZE_X = 256;
-    private static final int GRID_SIZE_Y = 128;
+    private static final int GRID_SIZE_X = 128;
+    private static final int GRID_SIZE_Y = 64;
 
     private static GolLogic golLogic;
 
-    private static final double RECT_SIZE = 7;
+    private static final double RECT_SIZE = 10;
     private static final double RECT_BORDER_WIDTH = 1;
     private static final double RECT_TOTAL_SIZE = RECT_SIZE + RECT_BORDER_WIDTH;
 
@@ -44,7 +45,8 @@ public class GolSceneBuilder extends SceneBuilder {
     private Timeline timeline;
     private boolean timelinePlaying;
 
-    private GraphicsContext gc;
+    private Canvas canvas;
+    private double scaleFactor = 1.0;
 
     public GolSceneBuilder(Main main) {
         super(main);
@@ -61,7 +63,7 @@ public class GolSceneBuilder extends SceneBuilder {
 
         golLogic = new GolLogic(GRID_SIZE_X, GRID_SIZE_Y, new GolCustomRules("B3/S23"));
 
-        double initialTimerDuration = 175;
+        double initialTimerDuration = 125;
 
         timeline = new Timeline(new KeyFrame(Duration.millis(initialTimerDuration), e -> onTimelineFrame()));
         timeline.setCycleCount(Timeline.INDEFINITE); // Repeat indefinitely
@@ -70,9 +72,9 @@ public class GolSceneBuilder extends SceneBuilder {
         timelineDurationInput.setPrefWidth(150);
         timelineDurationInput.setPromptText("" + initialTimerDuration);
 
-        Region parent = new VBox(10, mainMenu(), golGridWrapped());
+        Region parent = new VBox(10, mainMenu(), zoomableCanvas(GRID_SIZE_X * RECT_TOTAL_SIZE, GRID_SIZE_Y * RECT_TOTAL_SIZE));
         parent.setPadding(new Insets(10));
-        return new Scene(parent);
+        return new Scene(parent, GRID_SIZE_X * RECT_TOTAL_SIZE + 100, GRID_SIZE_Y * RECT_TOTAL_SIZE + 100);
 
     }
 
@@ -84,7 +86,7 @@ public class GolSceneBuilder extends SceneBuilder {
 
     private void evolveAndDrawGrid() {
         evolve();
-        drawGrid(gc);
+        drawGrid(canvas.getGraphicsContext2D());
     }
 
     private void evolve() {
@@ -151,7 +153,7 @@ public class GolSceneBuilder extends SceneBuilder {
                 }
             }
 
-            drawGrid(gc);
+            drawGrid(canvas.getGraphicsContext2D());
 
         });
 
@@ -206,22 +208,40 @@ public class GolSceneBuilder extends SceneBuilder {
                 e -> createScene(() -> new WelcomeSceneBuilder(main)));
     }
 
-    private Node golGridWrapped() {
-        StackPane canvasContainer = new StackPane(golGrid());
+    private Node zoomableCanvas(double canvasWidth, double canvasHeight) {
+
+        initCanvasGrid(canvasWidth, canvasHeight);
+
+        Pane canvasContainer = new Pane(canvas);
+
+        // Add zoom functionality
+        canvasContainer.setOnScroll((ScrollEvent event) -> {
+            double zoomFactor = 1.1; // Define zoom speed
+            if (event.getDeltaY() < 0) {
+                zoomFactor = 1 / zoomFactor; // Zoom out
+            }
+            double newScaleFactor = scaleFactor * zoomFactor;
+            if (newScaleFactor >= 0.5 && newScaleFactor <= 5.0) { // Limits: 50% to 500%
+                scaleFactor = newScaleFactor;
+                canvasContainer.getTransforms().clear(); // Clear previous transforms
+                Scale scale = new Scale(scaleFactor, scaleFactor, event.getX(), event.getY());
+                canvasContainer.getTransforms().add(scale);
+            }
+
+        });
+
         return canvasContainer;
+
     }
 
-    private Node golGrid() {
+    private void initCanvasGrid(double canvasWidth, double canvasHeight) {
 
-        Canvas canvas = new Canvas(GRID_SIZE_X * RECT_TOTAL_SIZE, GRID_SIZE_Y * RECT_TOTAL_SIZE);
-        gc = canvas.getGraphicsContext2D();
+        canvas = new Canvas(canvasWidth, canvasHeight);
 
-        drawGrid(gc);
+        drawGrid(canvas.getGraphicsContext2D());
 
-        canvas.addEventHandler(MouseEvent.MOUSE_PRESSED, e -> handleMousePressed(e, gc));
-        canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, e -> handleMouseDragged(e, gc));
-
-        return new Pane(canvas);
+        canvas.addEventHandler(MouseEvent.MOUSE_PRESSED, e -> handleMousePressed(e, canvas.getGraphicsContext2D()));
+        canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, e -> handleMouseDragged(e, canvas.getGraphicsContext2D()));
 
     }
 

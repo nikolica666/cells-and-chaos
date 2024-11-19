@@ -32,16 +32,17 @@ public class GolCustomRules implements GolRules {
 
         for (char c : splitBS[0].toCharArray()) {
             if (Character.isDigit(c)) { // Check if the character is a digit
-                toBecomeAlive.add((int) c);
+                toBecomeAlive.add(Character.getNumericValue(c));
             }
         }
 
         for (char c : splitBS[1].toCharArray()) {
             if (Character.isDigit(c)) { // Check if the character is a digit
-                toStayAlive.add((int) c);
+                toStayAlive.add(Character.getNumericValue(c));
             }
         }
-
+        System.out.println("toBecomeAlive"+toBecomeAlive);
+        System.out.println("toStayAlive"+toStayAlive);
     }
 
     public GolCustomRules(Set<Integer> toBecomeAlive, Set<Integer> toStayAlive) {
