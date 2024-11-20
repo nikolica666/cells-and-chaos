@@ -9,11 +9,21 @@ public class GolHighLifeRules implements GolRules {
 
     public boolean becomeAlive(GolCell[] neighbours) {
         int liveNeighbours = countLiveNeighbours(neighbours, 6);
+        return becomeAlive(liveNeighbours);
+    }
+
+    @Override
+    public boolean becomeAlive(int liveNeighbours) {
         return liveNeighbours == 3 || liveNeighbours == 6;
     }
 
     public boolean stayAlive(GolCell[] neighbours) {
         int liveNeighbours = countLiveNeighbours(neighbours, 3);
+        return stayAlive(liveNeighbours);
+    }
+
+    @Override
+    public boolean stayAlive(int liveNeighbours) {
         return liveNeighbours == 2 || liveNeighbours == 3;
     }
 

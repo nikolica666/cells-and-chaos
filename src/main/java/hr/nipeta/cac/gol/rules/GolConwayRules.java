@@ -8,12 +8,20 @@ import hr.nipeta.cac.gol.model.GolCell;
 public class GolConwayRules implements GolRules {
 
     public boolean becomeAlive(GolCell[] neighbours) {
-        int liveNeighbours = countLiveNeighbours(neighbours, 3);
+        return becomeAlive(countLiveNeighbours(neighbours, 3));
+    }
+
+    @Override
+    public boolean becomeAlive(int liveNeighbours) {
         return liveNeighbours == 3;
     }
 
     public boolean stayAlive(GolCell[] neighbours) {
-        int liveNeighbours = countLiveNeighbours(neighbours);
+        return stayAlive(countLiveNeighbours(neighbours, 3));
+    }
+
+    @Override
+    public boolean stayAlive(int liveNeighbours) {
         return liveNeighbours == 2 || liveNeighbours == 3;
     }
 

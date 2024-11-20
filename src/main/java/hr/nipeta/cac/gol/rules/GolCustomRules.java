@@ -1,6 +1,7 @@
 package hr.nipeta.cac.gol.rules;
 
 import hr.nipeta.cac.gol.model.GolCell;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -8,11 +9,32 @@ import java.util.Set;
 
 import static java.util.stream.Collectors.joining;
 
+@Slf4j
 public class GolCustomRules implements GolRules {
 
     private final Set<Integer> toBecomeAlive;
     private final Set<Integer> toStayAlive;
     private final String patternNotation;
+
+    public static boolean convertAndValidatePattern(String pattern) {
+
+        if (pattern == null) {
+            return false;
+        }
+
+        pattern = pattern.replaceAll("\\s+", "");
+
+        if (pattern.isEmpty()) {
+            return false;
+        }
+
+        if (!pattern.matches("B[0-8]*/S[0-8]*")) {
+            return false;
+        }
+
+        return true;
+
+    }
 
     public GolCustomRules(String patternNotation) {
 
@@ -40,8 +62,9 @@ public class GolCustomRules implements GolRules {
                 toStayAlive.add(Character.getNumericValue(c));
             }
         }
-        System.out.println("toBecomeAlive"+toBecomeAlive);
-        System.out.println("toStayAlive"+toStayAlive);
+
+        log.info("Created custom rules {}", patternNotation);
+
     }
 
     public GolCustomRules(Set<Integer> toBecomeAlive, Set<Integer> toStayAlive) {
@@ -57,12 +80,22 @@ public class GolCustomRules implements GolRules {
 
     @Override
     public boolean becomeAlive(GolCell[] neighbours) {
-        return toBecomeAlive.contains(countLiveNeighbours(neighbours));
+        return becomeAlive(countLiveNeighbours(neighbours));
+    }
+
+    @Override
+    public boolean becomeAlive(int liveNeighbours) {
+        return toBecomeAlive.contains(liveNeighbours);
     }
 
     @Override
     public boolean stayAlive(GolCell[] neighbours) {
-        return toStayAlive.contains(countLiveNeighbours(neighbours));
+        return stayAlive(countLiveNeighbours(neighbours));
+    }
+
+    @Override
+    public boolean stayAlive(int liveNeighbours) {
+        return toStayAlive.contains(liveNeighbours);
     }
 
     @Override

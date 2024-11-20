@@ -1,6 +1,7 @@
 package hr.nipeta.cac.ant;
 
 import hr.nipeta.cac.model.Coordinates;
+import hr.nipeta.cac.model.IntCoordinates;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,9 +11,9 @@ import lombok.Getter;
 public class LangtonAntState {
 
     private LangtonAntDirection direction;
-    private Coordinates<Integer> coordinates;
+    private IntCoordinates coordinates;
 
-    public static LangtonAntState of(LangtonAntDirection direction, Coordinates<Integer> coordinates) {
+    public static LangtonAntState of(LangtonAntDirection direction, IntCoordinates coordinates) {
         return new LangtonAntState(direction, coordinates);
     }
 

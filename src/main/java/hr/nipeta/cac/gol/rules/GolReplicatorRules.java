@@ -6,14 +6,26 @@ import hr.nipeta.cac.gol.model.GolCell;
  * B1357/S1357
  */
 public class GolReplicatorRules implements GolRules {
+
+
     @Override
     public boolean becomeAlive(GolCell[] neighbours) {
-        return countLiveNeighbours(neighbours) % 2 == 1;
+        return becomeAlive(countLiveNeighbours(neighbours));
+    }
+
+    @Override
+    public boolean becomeAlive(int liveNeighbours) {
+        return liveNeighbours % 2 == 1;
     }
 
     @Override
     public boolean stayAlive(GolCell[] neighbours) {
-        return countLiveNeighbours(neighbours) % 2 == 1;
+        return stayAlive(countLiveNeighbours(neighbours));
+    }
+
+    @Override
+    public boolean stayAlive(int liveNeighbours) {
+        return liveNeighbours % 2 == 1;
     }
 
     @Override

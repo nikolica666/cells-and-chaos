@@ -9,12 +9,22 @@ public class GolMazeRules implements GolRules {
 
     @Override
     public boolean becomeAlive(GolCell[] neighbours) {
-        return countLiveNeighbours(neighbours, 3) == 3;
+        return becomeAlive(countLiveNeighbours(neighbours, 3));
+    }
+
+    @Override
+    public boolean becomeAlive(int liveNeighbours) {
+        return liveNeighbours == 3;
     }
 
     @Override
     public boolean stayAlive(GolCell[] neighbours) {
-        return countLiveNeighbours(neighbours, 6) != 6;
+        return stayAlive(countLiveNeighbours(neighbours, 6));
+    }
+
+    @Override
+    public boolean stayAlive(int liveNeighbours) {
+        return liveNeighbours > 0 && liveNeighbours < 6;
     }
 
     @Override

@@ -4,9 +4,12 @@ import static java.lang.System.currentTimeMillis;
 
 import hr.nipeta.cac.Main;
 import hr.nipeta.cac.SceneBuilder;
-import hr.nipeta.cac.gol.model.GolCell;
+import hr.nipeta.cac.gol.count.NeighbourCountBox;
+import hr.nipeta.cac.gol.count.NeighbourCountOpen;
+import hr.nipeta.cac.gol.count.NeighbourCountWrap;
 import hr.nipeta.cac.gol.model.GolCellState;
-import hr.nipeta.cac.gol.rules.GolCustomRules;
+import hr.nipeta.cac.gol.rules.*;
+import hr.nipeta.cac.model.IntCoordinates;
 import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -16,7 +19,9 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -27,13 +32,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GolSceneBuilder extends SceneBuilder {
 
-    private static final int GRID_SIZE_X = 1024;
-    private static final int GRID_SIZE_Y = 512;
+    private static final int GRID_SIZE_X = 450;
+    private static final int GRID_SIZE_Y = 225;
 
     private static GolLogic golLogic;
 
-    private static final double RECT_SIZE = 1;
-    private static final double RECT_BORDER_WIDTH = 0;
+    private static final double RECT_SIZE = 4;
+    private static final double RECT_BORDER_WIDTH = 1;
     private static final double RECT_TOTAL_SIZE = RECT_SIZE + RECT_BORDER_WIDTH;
 
     private int lastToggledScreenRow;
@@ -52,7 +57,7 @@ public class GolSceneBuilder extends SceneBuilder {
 
     public Scene build() {
 
-        golLogic = new GolLogic(GRID_SIZE_X, GRID_SIZE_Y, new GolCustomRules("B3/S23"));
+        golLogic = new GolLogic(GRID_SIZE_X, GRID_SIZE_Y, new GolConwayRules(), new NeighbourCountWrap());
 
         double initialTimerDuration = 125;
 
@@ -81,9 +86,7 @@ public class GolSceneBuilder extends SceneBuilder {
     }
 
     private void evolve() {
-        long milli = currentTimeMillis();
         golLogic.evolve();
-        log.debug("Evolved in {}ms", currentTimeMillis() - milli);
     }
 
     private Node mainMenu() {
@@ -91,10 +94,12 @@ public class GolSceneBuilder extends SceneBuilder {
                 startButton(),
                 stopButton(),
                 stepButton(),
+                randomizeButton(),
                 clearButton(),
                 timelineDurationInput(),
                 timelineDurationButton(),
-                randomizeButton(),
+                rulesSelector(),
+                neighbourCountSelector(),
                 welcomeScreenButton()
         );
     }
@@ -130,23 +135,11 @@ public class GolSceneBuilder extends SceneBuilder {
                 timelinePlaying = false;
             }
 
-            for (int row = 0; row < GRID_SIZE_Y; row++) {
-                for (int col = 0; col < GRID_SIZE_X; col++) {
-                    clearState(row, col);
-                }
-            }
+            golLogic.setAllDead();
 
-            drawGrid(canvas.getGraphicsContext2D());
+            drawEmptyGrid(canvas.getGraphicsContext2D());
 
         });
-
-    }
-
-    private void clearState(int row, int col) {
-
-        GolCellState clearState = GolCellState.DEAD;
-
-        golLogic.setCellCurrentState(row, col, clearState);
 
     }
 
@@ -163,8 +156,8 @@ public class GolSceneBuilder extends SceneBuilder {
         Integer msDuration = null;
         try {
             int intInput = Integer.parseInt(input);
-            if (intInput < 30) {
-                showAlertError("Min frequency is 30ms.");
+            if (intInput < 5) {
+                showAlertError("Min frequency is 5ms.");
             } else if (intInput > 30_000) {
                 showAlertError("Max frequency is 30000ms.");
             } else {
@@ -193,6 +186,86 @@ public class GolSceneBuilder extends SceneBuilder {
             drawGrid(canvas.getGraphicsContext2D());
 
         });
+    }
+
+    private ComboBox<String> rulesSelector() {
+
+        ComboBox<String> rulesSelector = new ComboBox<>();
+        rulesSelector.getItems().addAll("Conway", "Anneal", "DayAndNight", "Diamoeba", "HighLife", "Seeds");
+        rulesSelector.setValue("Conway"); // Default selection
+        rulesSelector.setPrefWidth(250);
+        rulesSelector.getEditor().setContextMenu(null); // Preventing popup when typing in editor field
+        rulesSelector.setEditable(true);
+
+        Tooltip tooltip = new Tooltip("Born/Survive rules (classical rule is 'Conway' B3/S23 - born when 3 live neighbours, survive if 2 or 3 live neighbours)");
+        tooltip.setShowDelay(Duration.millis(0));
+        tooltip.setHideDelay(Duration.millis(0));
+
+        rulesSelector.setTooltip(tooltip);
+        rulesSelector.setOnAction(e -> {
+            String selectedRule = rulesSelector.getValue();
+
+            switch (selectedRule) {
+                case "Conway":
+                    golLogic.setRules(new GolConwayRules());
+                    break;
+                case "Anneal":
+                    golLogic.setRules(new GolAnnealRules());
+                    break;
+                case "DayAndNight":
+                    golLogic.setRules(new GolDayAndNightRules());
+                    break;
+                case "Diamoeba":
+                    golLogic.setRules(new GolDiamoebaRules());
+                    break;
+                case "HighLife":
+                    golLogic.setRules(new GolHighLifeRules());
+                    break;
+                case "Seeds":
+                    golLogic.setRules(new GolSeedsRules());
+                    break;
+                default:
+                    boolean validInput = GolCustomRules.convertAndValidatePattern(selectedRule);
+                    if (!validInput) {
+                        showAlertError("Custom pattern must be in regex 'B[0-8]*/S[0-8]*' (e.g. 'B3/S23' or 'B278/S' or 'B024/S045')");
+                    }
+                    golLogic.setRules(new GolCustomRules(selectedRule));
+            }
+        });
+
+        return rulesSelector;
+
+    }
+
+    private ComboBox<String> neighbourCountSelector() {
+
+        ComboBox<String> neighbourCountSelector = new ComboBox<>();
+        neighbourCountSelector.getItems().addAll("Box", "Open", "Wrap");
+        neighbourCountSelector.setValue("Wrap"); // Default selection
+        neighbourCountSelector.setPrefWidth(150);
+
+        Tooltip tooltip = new Tooltip("Border type");
+        tooltip.setShowDelay(Duration.millis(0));
+        tooltip.setHideDelay(Duration.millis(0));
+
+        neighbourCountSelector.setTooltip(tooltip);
+        neighbourCountSelector.setOnAction(e -> {
+            String selectedRule = neighbourCountSelector.getValue();
+            switch (selectedRule) {
+                case "Box":
+                    golLogic.setNeighbourCount(new NeighbourCountBox());
+                    break;
+                case "Open":
+                    golLogic.setNeighbourCount(new NeighbourCountOpen());
+                    break;
+                case "Wrap":
+                    golLogic.setNeighbourCount(new NeighbourCountWrap());
+                    break;
+            }
+        });
+
+        return neighbourCountSelector;
+
     }
 
     private Button welcomeScreenButton() {
@@ -231,7 +304,7 @@ public class GolSceneBuilder extends SceneBuilder {
 
         canvas = new Canvas(canvasWidth, canvasHeight);
 
-        drawGrid(canvas.getGraphicsContext2D());
+        drawEmptyGrid(canvas.getGraphicsContext2D());
 
         canvas.addEventHandler(MouseEvent.MOUSE_PRESSED, e -> handleMousePressed(e, canvas.getGraphicsContext2D()));
         canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, e -> handleMouseDragged(e, canvas.getGraphicsContext2D()));
@@ -244,19 +317,7 @@ public class GolSceneBuilder extends SceneBuilder {
         int row = (int)(e.getY() / RECT_TOTAL_SIZE);
 
         if (col >= 0 && col < GRID_SIZE_X && row >= 0 && row < GRID_SIZE_Y) {
-
-            // We set "next enum" when mouse is clicked on screen
-            GolCellState newCurrentState = golLogic.findCell(row, col).getCurrentState().next();
-
-            // Set new current state to logical cell
-            GolCell cell = golLogic.findCell(row, col);
-            cell.setCurrentState(newCurrentState);
-
-            drawCell(gc, cell);
-
-            lastToggledScreenRow = row;
-            lastToggledScreenCol = col;
-
+            toggleCell(row, col, gc);
         }
 
     }
@@ -268,18 +329,31 @@ public class GolSceneBuilder extends SceneBuilder {
 
         if (col >= 0 && col < GRID_SIZE_X && row >= 0 && row < GRID_SIZE_Y) {
             if (lastToggledScreenRow != row || lastToggledScreenCol != col) {
+                toggleCell(row, col, gc);
+            }
+        }
 
-                // We set "next enum" when mouse is dragged on screen
-                GolCellState newCurrentState = golLogic.findCell(row, col).getCurrentState().next();
+    }
 
-                // Set new current state to logical cell
-                golLogic.setCellCurrentState(row, col, newCurrentState);
+    private void toggleCell(int row, int col, GraphicsContext gc) {
 
-                drawCell(gc, golLogic.findCell(row, col));
+        lastToggledScreenRow = row;
+        lastToggledScreenCol = col;
 
-                lastToggledScreenRow = row;
-                lastToggledScreenCol = col;
+        // We set "next enum" when mouse is dragged on screen
+        GolCellState newState = golLogic.toggle(row, col);
 
+        drawCell(gc, row, col, setFillBasedOnCellState(newState));
+
+    }
+
+    private void drawEmptyGrid(GraphicsContext gc) {
+
+        // No need to clear canvas (not sure)
+
+        for (int row = 0; row < GRID_SIZE_Y; row++) {
+            for (int col = 0; col < GRID_SIZE_X; col++) {
+                drawEmptyCell(gc, row, col);
             }
         }
 
@@ -289,34 +363,47 @@ public class GolSceneBuilder extends SceneBuilder {
 
         long milli = currentTimeMillis();
 
-        // I'm not calling gc.clearRect on purpose, but maybe that's not wise
+        // No need to clear canvas (not sure)
+
         int counter = 0;
-        for (int row = 0; row < GRID_SIZE_Y; row++) {
-            for (int col = 0; col < GRID_SIZE_X; col++) {
-                GolCell cell = golLogic.findCellSetDeadIfAbsent(row, col);
-                if (cell.isStateChanged()) {
-                    drawCell(gc, cell);counter++;
-                }
-            }
+
+        // Needs refactoring
+        for (IntCoordinates cell : golLogic.getLiveCells()) {
+            counter++;
+            drawCell(gc, cell, setFillBasedOnCellState(GolCellState.ALIVE));
         }
+        for (IntCoordinates cell : golLogic.getDeadCells()) {
+            counter++;
+            drawCell(gc, cell, setFillBasedOnCellState(GolCellState.DEAD));
+        }
+
         log.debug("I drew {} of {} cells in {}ms", counter, GRID_SIZE_Y * GRID_SIZE_X, (currentTimeMillis() - milli));
 
     }
 
-    private void drawCell(GraphicsContext gc, GolCell cell) {
+    private void drawCell(GraphicsContext gc, IntCoordinates cell, Paint paint) {
+        drawCell(gc, cell.getY(), cell.getX(), paint);
+    }
 
-        log.trace("Drawing cell {}", cell);
+    private void drawCell(GraphicsContext gc, int row, int col, Paint paint) {
 
-        double x = cell.getCoordinates().getX() * RECT_TOTAL_SIZE;
-        double y = cell.getCoordinates().getY() * RECT_TOTAL_SIZE;
+        log.trace("Drawing cell row={}, col={} {}", row, col, paint);
 
-        GolCellState currentState = cell.getCurrentState();
+        double x = col * RECT_TOTAL_SIZE;
+        double y = row * RECT_TOTAL_SIZE;
 
-        // Draw cell background
-        gc.setFill(setFillBasedOnCellState(currentState));
+        gc.setFill(paint);
         gc.fillRect(x, y, RECT_SIZE, RECT_SIZE);
-//        gc.fillOval(x, y, RECT_SIZE, RECT_SIZE);
-//        gc.fillRoundRect(x, y, RECT_SIZE, RECT_SIZE, 25 , 25);
+
+    }
+
+    private void drawEmptyCell(GraphicsContext gc, int row, int col) {
+
+        double x = col * RECT_TOTAL_SIZE;
+        double y = row * RECT_TOTAL_SIZE;
+
+        gc.setFill(setFillBasedOnCellState(GolCellState.DEAD));
+        gc.fillRect(x, y, RECT_SIZE, RECT_SIZE);
 
     }
 

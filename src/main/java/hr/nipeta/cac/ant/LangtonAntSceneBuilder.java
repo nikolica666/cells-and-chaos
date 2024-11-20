@@ -3,6 +3,7 @@ package hr.nipeta.cac.ant;
 import hr.nipeta.cac.Main;
 import hr.nipeta.cac.SceneBuilder;
 import hr.nipeta.cac.model.Coordinates;
+import hr.nipeta.cac.model.IntCoordinates;
 import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
 import javafx.animation.AnimationTimer;
 import javafx.geometry.Insets;
@@ -280,7 +281,7 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
 
     private void drawAnt(GraphicsContext gc) {
 
-        Coordinates<Integer> antCellCoordinates = antLogic.getCurrentStateCoordinates();
+        IntCoordinates antCellCoordinates = antLogic.getCurrentStateCoordinates();
         double degrees = antLogic.getCurrentStateDirectionDegrees();
 
         Coordinates<Double> t1 = new Coordinates<>(antCellCoordinates.getX() * RECT_TOTAL_SIZE, (antCellCoordinates.getY() + 1) * RECT_TOTAL_SIZE);

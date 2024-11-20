@@ -9,11 +9,21 @@ public class GolSeedsRules implements GolRules {
 
     @Override
     public boolean becomeAlive(GolCell[] neighbours) {
-        return countLiveNeighbours(neighbours, 2) == 2;
+        return becomeAlive(countLiveNeighbours(neighbours, 2));
+    }
+
+    @Override
+    public boolean becomeAlive(int liveNeighbours) {
+        return liveNeighbours == 2;
     }
 
     @Override
     public boolean stayAlive(GolCell[] neighbours) {
+        return false;
+    }
+
+    @Override
+    public boolean stayAlive(int liveNeighbours) {
         return false;
     }
 

@@ -21,19 +21,21 @@ public interface GolRules {
     }
 
     boolean becomeAlive(GolCell[] neighbours);
-
+    boolean becomeAlive(int liveNeighbours);
     boolean stayAlive(GolCell[] neighbours);
+    boolean stayAlive(int liveNeighbours);
 
-    default int countLiveNeighbours(GolCell[] neighbours, int enoughLiveNeighbours) {
+    // TODO refactor this altough we'll probably end up deleting and use something optimal
+    default int countLiveNeighbours(GolCell[] neighbours, Integer enoughLiveNeighbours) {
 
         int numberOfLiveNeighbours = 0;
 
         for (GolCell neighbour : neighbours) {
+            if (numberOfLiveNeighbours >= enoughLiveNeighbours) {
+                break;
+            }
             if (neighbour.getCurrentState() == GolCellState.ALIVE) {
                 numberOfLiveNeighbours++;
-            }
-            if (numberOfLiveNeighbours > enoughLiveNeighbours) {
-                break;
             }
         }
 

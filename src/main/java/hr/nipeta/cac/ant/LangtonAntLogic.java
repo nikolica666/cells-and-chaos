@@ -1,6 +1,7 @@
 package hr.nipeta.cac.ant;
 
 import hr.nipeta.cac.model.Coordinates;
+import hr.nipeta.cac.model.IntCoordinates;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
@@ -49,7 +50,7 @@ public class LangtonAntLogic {
         // We'll put him mor to the top left if it's clear grid and he's facing west
         antState = LangtonAntState.of(
                 LangtonAntDirection.WEST,
-                new Coordinates<>(NUMBER_OF_COLUMNS / 3,NUMBER_OF_ROWS / 2));
+                IntCoordinates.of(NUMBER_OF_COLUMNS / 3,NUMBER_OF_ROWS / 2));
 
     }
 
@@ -71,10 +72,10 @@ public class LangtonAntLogic {
         // Take a step with an ant
         // TODO refactor...
         switch (newDirection) {
-            case NORTH -> antState = LangtonAntState.of(LangtonAntDirection.NORTH, new Coordinates<>(currentCol, currentRow - 1));
-            case EAST -> antState = LangtonAntState.of(LangtonAntDirection.EAST, new Coordinates<>(currentCol + 1, currentRow));
-            case SOUTH -> antState = LangtonAntState.of(LangtonAntDirection.SOUTH, new Coordinates<>(currentCol, currentRow + 1));
-            case WEST -> antState = LangtonAntState.of(LangtonAntDirection.WEST, new Coordinates<>(currentCol - 1, currentRow));
+            case NORTH -> antState = LangtonAntState.of(LangtonAntDirection.NORTH, IntCoordinates.of(currentCol, currentRow - 1));
+            case EAST -> antState = LangtonAntState.of(LangtonAntDirection.EAST, IntCoordinates.of(currentCol + 1, currentRow));
+            case SOUTH -> antState = LangtonAntState.of(LangtonAntDirection.SOUTH, IntCoordinates.of(currentCol, currentRow + 1));
+            case WEST -> antState = LangtonAntState.of(LangtonAntDirection.WEST, IntCoordinates.of(currentCol - 1, currentRow));
             default -> throw new RuntimeException();
         }
 
@@ -84,7 +85,7 @@ public class LangtonAntLogic {
         return cells.get(row).get(col);
     }
 
-    public Coordinates<Integer> getCurrentStateCoordinates() {
+    public IntCoordinates getCurrentStateCoordinates() {
         return antState.getCoordinates();
     }
 

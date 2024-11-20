@@ -10,12 +10,22 @@ public class GolMorleyRules implements GolRules {
     @Override
     public boolean becomeAlive(GolCell[] neighbours) {
         int liveNeighbours = countLiveNeighbours(neighbours);
+        return becomeAlive(liveNeighbours);
+    }
+
+    @Override
+    public boolean becomeAlive(int liveNeighbours) {
         return liveNeighbours == 3 || liveNeighbours == 6 || liveNeighbours == 8;
     }
 
     @Override
     public boolean stayAlive(GolCell[] neighbours) {
         int liveNeighbours = countLiveNeighbours(neighbours, 5);
+        return stayAlive(liveNeighbours);
+    }
+
+    @Override
+    public boolean stayAlive(int liveNeighbours) {
         return liveNeighbours == 2 || liveNeighbours == 4 || liveNeighbours == 5;
     }
 
