@@ -75,14 +75,14 @@ public class GolSceneBuilder extends SceneBuilder {
     }
 
     private void onTimelineFrame() {
-        long milli = currentTimeMillis();
         evolveAndDrawGrid();
-        log.debug("Evolved and drew in {}ms", currentTimeMillis() - milli);
     }
 
     private void evolveAndDrawGrid() {
+        long milli = System.currentTimeMillis();
         evolve();
         drawGrid(canvas.getGraphicsContext2D());
+        log.debug("Evolved and drew in {}ms", currentTimeMillis() - milli);
     }
 
     private void evolve() {

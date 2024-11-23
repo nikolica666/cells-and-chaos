@@ -4,6 +4,7 @@ import hr.nipeta.cac.Main;
 import hr.nipeta.cac.SceneBuilder;
 import hr.nipeta.cac.ant.LangtonAntSceneBuilder;
 import hr.nipeta.cac.ca.CellularAutomataSceneBuilder;
+import hr.nipeta.cac.collatz.CollatzSceneBuilder;
 import hr.nipeta.cac.gol.GolSceneBuilder;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -22,7 +23,8 @@ public class WelcomeSceneBuilder extends SceneBuilder {
         HBox box = horizontalMenu(
                 gameOfLifeButton(),
                 cellularAutomataButton(),
-                langtonAntButton()
+                langtonAntButton(),
+                collatzButton()
         );
 
         box.setPadding(new Insets(10));
@@ -47,6 +49,12 @@ public class WelcomeSceneBuilder extends SceneBuilder {
         return createButton(
                 "Langton's Ant",
                 e -> createScene(() -> new LangtonAntSceneBuilder(main)));
+    }
+
+    private Button collatzButton() {
+        return createButton(
+                "Collatz conjecture",
+                e -> createScene(() -> new CollatzSceneBuilder(main)));
     }
 
 }
