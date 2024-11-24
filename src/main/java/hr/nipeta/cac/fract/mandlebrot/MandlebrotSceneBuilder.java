@@ -50,7 +50,7 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
                 step = step * 2;  // Zoom out
             }
 
-            calculateAndDraw(fractalGc, currentCenter, step,(canvasPixelsX - 1) / 2, (canvasPixelsY - 1) / 2);
+            calculateAndDraw(fractalGc, currentCenter, step, canvasPixelsX, canvasPixelsY);
 
             //event.consume();  // Consume the event to prevent further handling
 
@@ -60,7 +60,7 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
         // Tooltip layer is on top, on its event, will pass in Fractal's canvas graphic context
         tooltipCanvas.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> handleMousePressed(e, fractalGc));
 
-        calculateAndDraw(fractalGc, currentCenter,step,(canvasPixelsX - 1) / 2, (canvasPixelsY - 1) / 2);
+        calculateAndDraw(fractalGc, currentCenter, step, canvasPixelsX, canvasPixelsY);
 
         StackPane root = new StackPane(fractalCanvas, tooltipCanvas);
         return new Scene(root, canvasPixelsX, canvasPixelsY);
@@ -69,24 +69,13 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
 
     private void handleMousePressed(MouseEvent e, GraphicsContext gc) {
 
-        log.debug("{}", e.getEventType());
-
-        log.debug("{} on x={}, y={}", e.getEventType(), e.getX(),e.getY());
-
         double pixelsToCenterX = (canvasPixelsX - 1) / 2 - e.getX();
         double pixelsToCenterY = (canvasPixelsY - 1) / 2 - e.getY();
-
-        log.debug("pixelsToCenterX={}, pixelsToCenterY={}", pixelsToCenterX,pixelsToCenterY);
 
         double realPart = currentCenter.getX() - pixelsToCenterX * step;
         double imagPart = currentCenter.getY() + pixelsToCenterY * step;
 
-        log.debug("coordX={}, coordY={}", realPart, imagPart);
-
         ComplexNumber newCurrentCenter = ComplexNumber.xy(realPart, imagPart);
-
-        log.debug("oldCenter={}", currentCenter);
-        log.debug("newCenter={}", newCurrentCenter);
 
         currentCenter = newCurrentCenter;
 
@@ -99,7 +88,7 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
             }
         }
 
-        calculateAndDraw(gc, currentCenter, step,(canvasPixelsX - 1) / 2, (canvasPixelsY - 1) / 2);
+        calculateAndDraw(gc, currentCenter, step,canvasPixelsX, canvasPixelsY);
 
     }
 
@@ -126,9 +115,15 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
 
     }
 
-    private void calculateAndDraw(GraphicsContext gc, ComplexNumber center, double step, int stepsX, int stepsY) {
+    private void calculateAndDraw(GraphicsContext gc, ComplexNumber center, double step, int pixelsX, int pixelsY) {
 
-        FractalResult[][] fractalResults = new MandlebrotLogic().calculateGrid(center, step, stepsX, stepsY);
+        FractalResult[][] fractalResults = new MandlebrotLogic()
+                .calculateGrid(
+                        center.getX() - (pixelsX - 1) / 2 * step,
+                        center.getY() + (pixelsY - 1) / 2 * step,
+                        step,
+                        pixelsX,
+                        pixelsY);
 
         var pixelWriter = gc.getPixelWriter();
 
@@ -137,9 +132,11 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
         gc.fillRect(0,0, canvasPixelsX, canvasPixelsY);
 
         // Loop through each pixel (x, y)
-        for (int x = 0; x < 2 * stepsX + 1; x++) {
-            for (int y = 0; y < 2 * stepsY + 1; y++) {
+        for (int x = 0; x < pixelsX; x++) {
+            for (int y = 0; y < pixelsY; y++) {
                 FractalResult point = fractalResults[x][y];
+                if (x==0&&y==0)log.debug("{}", point);
+                if (x==pixelsX&&y==pixelsY)log.debug("{}", point);
                 if (point.isDiverged()) {
                     Color color = Color.rgb((int)(point.getIterations() / MandlebrotLogic.MAX_ITERATIONS * 255), 0, 0);
                     pixelWriter.setColor(x, y, color);

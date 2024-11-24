@@ -2,6 +2,7 @@ package hr.nipeta.cac.fract.julia;
 
 import hr.nipeta.cac.Main;
 import hr.nipeta.cac.SceneBuilder;
+import hr.nipeta.cac.fract.mandlebrot.MandlebrotLogic;
 import hr.nipeta.cac.fract.model.FractalResult;
 import hr.nipeta.cac.model.ComplexNumber;
 import javafx.scene.Scene;
@@ -44,7 +45,7 @@ public class JuliaSceneBuilder extends SceneBuilder {
         // Tooltip layer is on top, on its event, will pass in Fractal's canvas graphic context
         tooltipCanvas.addEventHandler(MouseEvent.MOUSE_PRESSED, e -> handleMousePressed(e, fractalGc));
 
-        calculateAndDraw(fractalGc, currentCenter,step,(canvasPixelsX - 1) / 2, (canvasPixelsY - 1) / 2);
+        calculateAndDraw(fractalGc, currentCenter,step,canvasPixelsX, canvasPixelsY);
 
         StackPane root = new StackPane(fractalCanvas, tooltipCanvas);
         return new Scene(root, canvasPixelsX, canvasPixelsY);
@@ -81,23 +82,18 @@ public class JuliaSceneBuilder extends SceneBuilder {
             }
         }
 
-        calculateAndDraw(gc, currentCenter,step,(canvasPixelsX - 1) / 2, (canvasPixelsY - 1) / 2);
+        calculateAndDraw(gc, currentCenter, step, canvasPixelsX, canvasPixelsY);
 
     }
 
     private void handleMouseMoved(MouseEvent e, GraphicsContext gc) {
 
-        log.debug("{} on x={}, y={}", e.getEventType(), e.getX(),e.getY());
-
         double pixelsToCenterX = (canvasPixelsX - 1) / 2 - e.getX();
         double pixelsToCenterY = (canvasPixelsY - 1) / 2 - e.getY();
-
-        log.debug("pixelsToCenterX={}, pixelsToCenterY={}", pixelsToCenterX,pixelsToCenterY);
 
         double realPart = currentCenter.getX() - pixelsToCenterX * step;
         double imagPart = currentCenter.getY() + pixelsToCenterY * step;
 
-        log.debug("coordX={}, coordY={}", realPart,imagPart);
         gc.setFill(Color.WHEAT);
         gc.clearRect(0, 0, canvasPixelsX, canvasPixelsY);
         gc.fillText(
@@ -113,19 +109,25 @@ public class JuliaSceneBuilder extends SceneBuilder {
 
     }
 
-    private void calculateAndDraw(GraphicsContext gc, ComplexNumber center, double step, int stepsX, int stepsY) {
+    private void calculateAndDraw(GraphicsContext gc, ComplexNumber center, double step, int pixelsX, int pixelsY) {
 
-        FractalResult[][] fractalResults = new JuliaLogic(pivot).calculateGrid(center, step, stepsX, stepsY);
+        FractalResult[][] fractalResults = new JuliaLogic(pivot)
+                .calculateGrid(
+                        center.getX() - (pixelsX - 1) / 2 * step,
+                        center.getY() + (pixelsY - 1) / 2 * step,
+                        step,
+                        pixelsX,
+                        pixelsY);
 
         var pixelWriter = gc.getPixelWriter();
 
-        gc.clearRect(0, 0, canvasPixelsX, canvasPixelsY);
+        gc.clearRect(0,0, canvasPixelsX, canvasPixelsY);
         gc.setFill(Color.BLACK);
-        gc.fillRect(0, 0, canvasPixelsX, canvasPixelsY);
+        gc.fillRect(0,0, canvasPixelsX, canvasPixelsY);
 
         // Loop through each pixel (x, y)
-        for (int x = 0; x < 2 * stepsX + 1; x++) {
-            for (int y = 0; y < 2 * stepsY + 1; y++) {
+        for (int x = 0; x < pixelsX; x++) {
+            for (int y = 0; y < pixelsY; y++) {
                 FractalResult point = fractalResults[x][y];
                 if (point.isDiverged()) {
                     Color color = Color.rgb((int)(point.getIterations() / JuliaLogic.MAX_ITERATIONS * 255), 0, 0);
