@@ -21,8 +21,7 @@ log.debug("from {} + {}i step {} stepsX={} stepsY={}", fromTopLeftX, fromTopLeft
 
         for (int i = 0; i < stepsX; i++) {
             for (int j = 0; j < stepsY; j++) {
-                ComplexNumber c = new ComplexNumber(fromTopLeftX + i * step, fromTopLeftY - j * step);
-                result[i][j] = calculate(c);
+                result[i][j] = calculate(ComplexNumber.xy(fromTopLeftX + i * step, fromTopLeftY - j * step));
             }
         }
 

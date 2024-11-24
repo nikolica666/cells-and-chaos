@@ -41,18 +41,24 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
 
             double deltaY = event.getDeltaY();
 
-            log.debug("scroll event, deltaY={}", deltaY);
+            if (deltaY == 0) {
+                log.debug("Ignoring {} because deltaY == 0", event.getEventType());
+            }
+
+            log.debug("scroll event {}", event);
 
             // Zoom in or out based on the scroll direction
             if (deltaY > 0) {
                 step = step / 2;  // Zoom in
-            } else {
+            } else if (deltaY < 0){
                 step = step * 2;  // Zoom out
+            } else {
+                return;
             }
 
             calculateAndDraw(fractalGc, currentCenter, step, canvasPixelsX, canvasPixelsY);
 
-            //event.consume();  // Consume the event to prevent further handling
+            event.consume();  // Consume the event to prevent further handling
 
         });
 

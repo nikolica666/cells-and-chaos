@@ -11,9 +11,9 @@ public class JuliaLogic {
 
     private final ComplexNumber pivot;
 
-    public static final double MAX_ITERATIONS = 127;
-    public static final double MAX_MAGNITUDE = 1_000;
-    public static final double EPSILON = 1e-6;
+    public static final double MAX_ITERATIONS = 255;
+    public static final double MAX_MAGNITUDE = 2;
+    public static final double EPSILON = 1e-9;
 
     public FractalResult[][] calculateGrid(double fromTopLeftX, double fromTopLeftY, double step, int stepsX, int stepsY) {
 
@@ -23,8 +23,7 @@ public class JuliaLogic {
 
         for (int i = 0; i < stepsX; i++) {
             for (int j = 0; j < stepsY; j++) {
-                ComplexNumber c = new ComplexNumber(fromTopLeftX + i * step, fromTopLeftY - j * step);
-                result[i][j] = calculate(c);
+                result[i][j] = calculate(ComplexNumber.xy(fromTopLeftX + i * step, fromTopLeftY - j * step));
             }
         }
 

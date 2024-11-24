@@ -14,6 +14,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+
 @Slf4j
 public class JuliaSceneBuilder extends SceneBuilder {
 
@@ -28,10 +32,22 @@ public class JuliaSceneBuilder extends SceneBuilder {
         super(main);
     }
 
+    private static final List<ComplexNumber> interestingJuliaPoints = Arrays.asList(
+            ComplexNumber.parse("0.285 + 0.01i"),
+            ComplexNumber.parse("−0.70176 - 0.3842i"),
+            ComplexNumber.parse("−0.8+0.156i"),
+            ComplexNumber.parse("0.285+0.01i"),
+            ComplexNumber.parse("−0.4+0.6i"),
+            ComplexNumber.parse("−0.74543+0.11301i"),
+            ComplexNumber.parse("0.3−0.63i"),
+            ComplexNumber.parse("−1.476+0i"),
+            ComplexNumber.parse("0.355+0.355i")
+    );
+
     @Override
     public Scene createContent() {
 
-        pivot = new ComplexNumber(0.3,0.3);
+        pivot = interestingJuliaPoints.get(new Random().nextInt(interestingJuliaPoints.size()));
 
         Canvas fractalCanvas = new Canvas(canvasPixelsX, canvasPixelsY);
         GraphicsContext fractalGc = fractalCanvas.getGraphicsContext2D();
