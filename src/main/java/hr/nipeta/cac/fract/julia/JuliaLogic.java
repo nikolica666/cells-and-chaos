@@ -1,4 +1,4 @@
-package hr.nipeta.cac.fract.mandlebrot;
+package hr.nipeta.cac.fract.julia;
 
 import hr.nipeta.cac.fract.model.FractalResult;
 import hr.nipeta.cac.model.ComplexNumber;
@@ -7,7 +7,10 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MandlebrotLogic {
+@AllArgsConstructor
+public class JuliaLogic {
+
+    private final ComplexNumber pivot;
 
     public static final double MAX_ITERATIONS = 127;
     public static final double MAX_MAGNITUDE = 1_000;
@@ -32,7 +35,7 @@ public class MandlebrotLogic {
     }
 
     public FractalResult calculate(ComplexNumber c) {
-        return calculate(ComplexNumber.ZERO, c, 0);
+        return calculate(c, pivot, 0);
     }
 
     public FractalResult calculate(ComplexNumber zCurr, ComplexNumber c, int iteration) {

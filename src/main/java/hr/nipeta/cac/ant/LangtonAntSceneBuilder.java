@@ -54,7 +54,7 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
     }
 
     @Override
-    public Scene build() {
+    public Scene createContent() {
 
         // Classical rules are default (2 types of tiles, turn left / turn right)
         antRules = "RL";

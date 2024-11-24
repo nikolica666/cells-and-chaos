@@ -55,7 +55,8 @@ public class GolSceneBuilder extends SceneBuilder {
         super(main);
     }
 
-    public Scene build() {
+    @Override
+    public Scene createContent() {
 
         golLogic = new GolLogic(GRID_SIZE_X, GRID_SIZE_Y, new GolConwayRules(), new NeighbourCountWrap());
 

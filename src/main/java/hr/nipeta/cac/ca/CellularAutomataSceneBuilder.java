@@ -47,7 +47,7 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
     }
 
     @Override
-    public Scene build() {
+    public Scene createContent() {
 
         rule = new Random().nextInt(256);
 

@@ -5,8 +5,11 @@ import hr.nipeta.cac.SceneBuilder;
 import hr.nipeta.cac.ant.LangtonAntSceneBuilder;
 import hr.nipeta.cac.ca.CellularAutomataSceneBuilder;
 import hr.nipeta.cac.collatz.CollatzSceneBuilder;
+import hr.nipeta.cac.fract.julia.JuliaSceneBuilder;
 import hr.nipeta.cac.fract.mandlebrot.MandlebrotSceneBuilder;
 import hr.nipeta.cac.gol.GolSceneBuilder;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -19,14 +22,15 @@ public class WelcomeSceneBuilder extends SceneBuilder {
     }
 
     @Override
-    public Scene build() {
+    public Scene createContent() {
 
         HBox box = horizontalMenu(
-                gameOfLifeButton(),
-                cellularAutomataButton(),
-                langtonAntButton(),
-                collatzButton(),
-                mandlebrotButton()
+                createSceneChangeButton("Game of Life", new GolSceneBuilder(main)),
+                createSceneChangeButton("Cellular Automata", new CellularAutomataSceneBuilder(main)),
+                createSceneChangeButton("Langton's Ant", new LangtonAntSceneBuilder(main)),
+                createSceneChangeButton("Collatz conjecture",new CollatzSceneBuilder(main)),
+                createSceneChangeButton("M", new MandlebrotSceneBuilder(main)),
+                createSceneChangeButton("J", new JuliaSceneBuilder(main))
         );
 
         box.setPadding(new Insets(10));
@@ -35,34 +39,12 @@ public class WelcomeSceneBuilder extends SceneBuilder {
 
     }
 
-    private Button gameOfLifeButton() {
-        return createButton(
-                "Game of Life",
-                e -> createScene(() -> new GolSceneBuilder(main)));
+    private Button createSceneChangeButton(String label, SceneBuilder sceneBuilder) {
+        return createButton(label, sceneEventHandler(sceneBuilder));
     }
 
-    private Button cellularAutomataButton() {
-        return createButton(
-                "Cellular Automata",
-                e -> createScene(() -> new CellularAutomataSceneBuilder(main)));
-    }
-
-    private Button langtonAntButton() {
-        return createButton(
-                "Langton's Ant",
-                e -> createScene(() -> new LangtonAntSceneBuilder(main)));
-    }
-
-    private Button collatzButton() {
-        return createButton(
-                "Collatz conjecture",
-                e -> createScene(() -> new CollatzSceneBuilder(main)));
-    }
-
-    private Button mandlebrotButton() {
-        return createButton(
-                "M",
-                e -> createScene(() -> new MandlebrotSceneBuilder(main)));
+    private EventHandler<ActionEvent> sceneEventHandler(SceneBuilder b) {
+        return (e) -> createScene(() -> b);
     }
 
 }

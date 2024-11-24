@@ -45,7 +45,7 @@ public class CollatzSceneBuilder extends SceneBuilder {
     }
 
     @Override
-    public Scene build() {
+    public Scene createContent() {
 
         collatzLogic = new CollatzLogic();
 
@@ -77,7 +77,7 @@ public class CollatzSceneBuilder extends SceneBuilder {
 
         canvas = new Canvas(1600, 1200);
         StackPane wrapper = new StackPane(canvas);
-        wrapper.setStyle("-fx-background-color: #232323;");
+        wrapper.getStyleClass().add("bg-dark");
 
         Region parent = new VBox(10, mainMenu(), wrapper);
         parent.setPadding(new Insets(10));

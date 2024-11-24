@@ -1,0 +1,9 @@
+HBox {
+    -fx-font-size: 20px;
+    -fx-spacing: 5px;
+    -fx-alignment: center;
+}
+
+.bg-dark {
+    -fx-background-color: #232323;
+}

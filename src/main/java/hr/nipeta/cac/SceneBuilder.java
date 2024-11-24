@@ -23,7 +23,13 @@ public abstract class SceneBuilder {
         this.main = main;  // Assign the Main instance
     }
 
-    abstract public Scene build();
+    public Scene build() {
+        Scene scene = createContent();
+        scene.getStylesheets().add(getClass().getResource("/css/main.css").toExternalForm());
+        return scene;
+    }
+
+    protected abstract Scene createContent();
 
     protected <T extends SceneBuilder> void createScene(Supplier<T> constructor) {
         Scene scene = constructor.get().build();
@@ -63,11 +69,7 @@ public abstract class SceneBuilder {
     }
 
     protected HBox horizontalMenu(Node... nodes) {
-        HBox box = new HBox(nodes);
-        box.setStyle("-fx-font-size: 20px;");
-        box.setSpacing(5);
-        return box;
-
+        return new HBox(nodes);
     }
 
 }

@@ -2,7 +2,9 @@ package hr.nipeta.cac.model;
 
 public class ComplexNumber extends Coordinates<Double> {
 
+    public static final ComplexNumber MINUS_ONE = new ComplexNumber(-1,0);
     public static final ComplexNumber ZERO = new ComplexNumber(0,0);
+    public static final ComplexNumber ONE = new ComplexNumber(1,0);
 
     public ComplexNumber(double real, double imaginary) {
         super(real, imaginary);
