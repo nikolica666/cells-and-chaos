@@ -9,8 +9,8 @@ import lombok.ToString;
 @ToString
 public class Coordinates<T extends Number> {
 
-    private final T x;
-    private final T y;
+    protected final T x;
+    protected final T y;
 
     public Coordinates(T x, T y) {
         this.x = x;

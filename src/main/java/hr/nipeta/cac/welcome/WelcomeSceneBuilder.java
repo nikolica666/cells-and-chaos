@@ -5,6 +5,7 @@ import hr.nipeta.cac.SceneBuilder;
 import hr.nipeta.cac.ant.LangtonAntSceneBuilder;
 import hr.nipeta.cac.ca.CellularAutomataSceneBuilder;
 import hr.nipeta.cac.collatz.CollatzSceneBuilder;
+import hr.nipeta.cac.fract.mandlebrot.MandlebrotSceneBuilder;
 import hr.nipeta.cac.gol.GolSceneBuilder;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -24,7 +25,8 @@ public class WelcomeSceneBuilder extends SceneBuilder {
                 gameOfLifeButton(),
                 cellularAutomataButton(),
                 langtonAntButton(),
-                collatzButton()
+                collatzButton(),
+                mandlebrotButton()
         );
 
         box.setPadding(new Insets(10));
@@ -55,6 +57,12 @@ public class WelcomeSceneBuilder extends SceneBuilder {
         return createButton(
                 "Collatz conjecture",
                 e -> createScene(() -> new CollatzSceneBuilder(main)));
+    }
+
+    private Button mandlebrotButton() {
+        return createButton(
+                "M",
+                e -> createScene(() -> new MandlebrotSceneBuilder(main)));
     }
 
 }
