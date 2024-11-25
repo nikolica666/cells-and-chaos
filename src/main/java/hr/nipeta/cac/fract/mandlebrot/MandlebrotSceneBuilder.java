@@ -79,11 +79,9 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
         double pixelsToCenterY = (double)(canvasPixelsY - 1) / 2 - e.getY();
 
         double realPart = currentCenter.getX() - pixelsToCenterX * step;
-        double imagPart = currentCenter.getY() + pixelsToCenterY * step;
+        double imaginaryPart = currentCenter.getY() + pixelsToCenterY * step;
 
-        ComplexNumber newCurrentCenter = ComplexNumber.xy(realPart, imagPart);
-
-        currentCenter = newCurrentCenter;
+        currentCenter = ComplexNumber.xy(realPart, imaginaryPart);
 
         switch (e.getButton()) {
             case PRIMARY -> {
@@ -104,7 +102,7 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
         double pixelsToCenterY = (double)(canvasPixelsY - 1) / 2 - e.getY();
 
         double realPart = currentCenter.getX() - pixelsToCenterX * step;
-        double imagPart = currentCenter.getY() + pixelsToCenterY * step;
+        double imaginaryPart = currentCenter.getY() + pixelsToCenterY * step;
 
         gc.setFill(Color.WHEAT);
         gc.clearRect(0, 0, canvasPixelsX, canvasPixelsY);
@@ -115,7 +113,7 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
                         pixelsToCenterX,
                         pixelsToCenterY,
                         realPart,
-                        imagPart),
+                        imaginaryPart),
                 e.getX() + 16,
                 e.getY());
 

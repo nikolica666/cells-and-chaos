@@ -9,8 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MandlebrotLogic {
 
-    public static final double MAX_ITERATIONS = 255;
-    public static final double MAX_MAGNITUDE = 2;
+    public static final short MAX_ITERATIONS = 255;
+    public static final short MAX_MAGNITUDE = 2;
     public static final double EPSILON = 1e-9;
 
     public FractalResult[][] calculateGrid(double fromTopLeftX, double fromTopLeftY, double step, int stepsX, int stepsY) {

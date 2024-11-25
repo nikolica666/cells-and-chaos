@@ -78,16 +78,9 @@ public class JuliaSceneBuilder extends SceneBuilder {
         log.debug("pixelsToCenterX={}, pixelsToCenterY={}", pixelsToCenterX,pixelsToCenterY);
 
         double realPart = currentCenter.getX() - pixelsToCenterX * step;
-        double imagPart = currentCenter.getY() + pixelsToCenterY * step;
+        double imaginaryPart = currentCenter.getY() + pixelsToCenterY * step;
 
-        log.debug("coordX={}, coordY={}", realPart,imagPart);
-
-        ComplexNumber newCurrentCenter = ComplexNumber.xy(realPart,imagPart);
-
-        log.debug("oldCenter={}", currentCenter);
-        log.debug("newCenter={}", newCurrentCenter);
-
-        currentCenter = newCurrentCenter;
+        currentCenter = ComplexNumber.xy(realPart, imaginaryPart);
 
         switch (e.getButton()) {
             case PRIMARY -> {
@@ -108,7 +101,7 @@ public class JuliaSceneBuilder extends SceneBuilder {
         double pixelsToCenterY = (double)(canvasPixelsY - 1) / 2 - e.getY();
 
         double realPart = currentCenter.getX() - pixelsToCenterX * step;
-        double imagPart = currentCenter.getY() + pixelsToCenterY * step;
+        double imaginaryPart = currentCenter.getY() + pixelsToCenterY * step;
 
         gc.setFill(Color.WHEAT);
         gc.clearRect(0, 0, canvasPixelsX, canvasPixelsY);
@@ -119,7 +112,7 @@ public class JuliaSceneBuilder extends SceneBuilder {
                         pixelsToCenterX,
                         pixelsToCenterY,
                         realPart,
-                        imagPart),
+                        imaginaryPart),
                 e.getX() + 16,
                 e.getY());
 
