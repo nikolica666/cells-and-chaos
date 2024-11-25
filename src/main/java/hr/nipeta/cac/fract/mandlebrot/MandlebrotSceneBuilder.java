@@ -75,8 +75,8 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
 
     private void handleMousePressed(MouseEvent e, GraphicsContext gc) {
 
-        double pixelsToCenterX = (canvasPixelsX - 1) / 2 - e.getX();
-        double pixelsToCenterY = (canvasPixelsY - 1) / 2 - e.getY();
+        double pixelsToCenterX = (double)(canvasPixelsX - 1) / 2 - e.getX();
+        double pixelsToCenterY = (double)(canvasPixelsY - 1) / 2 - e.getY();
 
         double realPart = currentCenter.getX() - pixelsToCenterX * step;
         double imagPart = currentCenter.getY() + pixelsToCenterY * step;
@@ -100,8 +100,8 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
 
     private void handleMouseMoved(MouseEvent e, GraphicsContext gc) {
 
-        double pixelsToCenterX = (canvasPixelsX - 1) / 2 - e.getX();
-        double pixelsToCenterY = (canvasPixelsY - 1) / 2 - e.getY();
+        double pixelsToCenterX = (double)(canvasPixelsX - 1) / 2 - e.getX();
+        double pixelsToCenterY = (double)(canvasPixelsY - 1) / 2 - e.getY();
 
         double realPart = currentCenter.getX() - pixelsToCenterX * step;
         double imagPart = currentCenter.getY() + pixelsToCenterY * step;
@@ -125,8 +125,8 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
 
         FractalResult[][] fractalResults = new MandlebrotLogic()
                 .calculateGrid(
-                        center.getX() - (pixelsX - 1) / 2 * step,
-                        center.getY() + (pixelsY - 1) / 2 * step,
+                        center.getX() - (double)(pixelsX - 1) / 2 * step,
+                        center.getY() + (double)(pixelsY - 1) / 2 * step,
                         step,
                         pixelsX,
                         pixelsY);
@@ -141,10 +141,8 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
         for (int x = 0; x < pixelsX; x++) {
             for (int y = 0; y < pixelsY; y++) {
                 FractalResult point = fractalResults[x][y];
-                if (x==0&&y==0)log.debug("{}", point);
-                if (x==pixelsX&&y==pixelsY)log.debug("{}", point);
                 if (point.isDiverged()) {
-                    Color color = Color.rgb((int)(point.getIterations() / MandlebrotLogic.MAX_ITERATIONS * 255), 0, 0);
+                    Color color = Color.rgb((int)(point.getIterations() / MandlebrotLogic.MAX_ITERATIONS * 255), (int)(point.getIterations() / MandlebrotLogic.MAX_ITERATIONS * 255) / 2, 0);
                     pixelWriter.setColor(x, y, color);
                 }
             }

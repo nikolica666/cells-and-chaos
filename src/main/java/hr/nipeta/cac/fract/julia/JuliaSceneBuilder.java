@@ -72,8 +72,8 @@ public class JuliaSceneBuilder extends SceneBuilder {
 
         log.debug("{} on x={}, y={}", e.getEventType(), e.getX(),e.getY());
 
-        double pixelsToCenterX = (canvasPixelsX - 1) / 2 - e.getX();
-        double pixelsToCenterY = (canvasPixelsY - 1) / 2 - e.getY();
+        double pixelsToCenterX = (double)(canvasPixelsX - 1) / 2 - e.getX();
+        double pixelsToCenterY = (double)(canvasPixelsY - 1) / 2 - e.getY();
 
         log.debug("pixelsToCenterX={}, pixelsToCenterY={}", pixelsToCenterX,pixelsToCenterY);
 
@@ -104,8 +104,8 @@ public class JuliaSceneBuilder extends SceneBuilder {
 
     private void handleMouseMoved(MouseEvent e, GraphicsContext gc) {
 
-        double pixelsToCenterX = (canvasPixelsX - 1) / 2 - e.getX();
-        double pixelsToCenterY = (canvasPixelsY - 1) / 2 - e.getY();
+        double pixelsToCenterX = (double)(canvasPixelsX - 1) / 2 - e.getX();
+        double pixelsToCenterY = (double)(canvasPixelsY - 1) / 2 - e.getY();
 
         double realPart = currentCenter.getX() - pixelsToCenterX * step;
         double imagPart = currentCenter.getY() + pixelsToCenterY * step;
@@ -129,8 +129,8 @@ public class JuliaSceneBuilder extends SceneBuilder {
 
         FractalResult[][] fractalResults = new JuliaLogic(pivot)
                 .calculateGrid(
-                        center.getX() - (pixelsX - 1) / 2 * step,
-                        center.getY() + (pixelsY - 1) / 2 * step,
+                        center.getX() - (double)(pixelsX - 1) / 2 * step,
+                        center.getY() + (double)(pixelsY - 1) / 2 * step,
                         step,
                         pixelsX,
                         pixelsY);
@@ -146,7 +146,7 @@ public class JuliaSceneBuilder extends SceneBuilder {
             for (int y = 0; y < pixelsY; y++) {
                 FractalResult point = fractalResults[x][y];
                 if (point.isDiverged()) {
-                    Color color = Color.rgb((int)(point.getIterations() / JuliaLogic.MAX_ITERATIONS * 255), 0, 0);
+                    Color color = Color.rgb(0, 0, (int)(point.getIterations() / JuliaLogic.MAX_ITERATIONS * 255));
                     pixelWriter.setColor(x, y, color);
                 }
             }
