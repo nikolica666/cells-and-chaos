@@ -139,7 +139,7 @@ public class JuliaSceneBuilder extends SceneBuilder {
             for (int y = 0; y < pixelsY; y++) {
                 FractalResult point = fractalResults[x][y];
                 if (point.isDiverged()) {
-                    Color color = Color.rgb(0, 0, (int)(point.getIterations() / JuliaLogic.MAX_ITERATIONS * 255));
+                    Color color = Color.rgb((int)(point.getIterations() / JuliaLogic.MAX_ITERATIONS * 255), 0, 0);
                     pixelWriter.setColor(x, y, color);
                 }
             }
