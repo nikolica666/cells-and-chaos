@@ -31,21 +31,21 @@ log.debug("from {} + {}i step {} stepsX={} stepsY={}", fromTopLeftX, fromTopLeft
     }
 
     public FractalResult calculate(ComplexNumber c) {
-        return calculate(ComplexNumber.ZERO, c, 0);
+        return calculate(ComplexNumber.ZERO, 0, c, 0);
     }
 
-    public FractalResult calculate(ComplexNumber zCurr, ComplexNumber c, int iteration) {
+    public FractalResult calculate(ComplexNumber zCurr, double zCurrMagnitude, ComplexNumber c, int iteration) {
 
         ComplexNumber zNext = zCurr.sq().add(c);
         double zNextMagnitude = zNext.magnitude();
 
-        if (zNext.magnitude() > MAX_MAGNITUDE) {
+        if (zNextMagnitude > MAX_MAGNITUDE) {
             return new FractalResult(c, iteration, true, null);
         }
 
         iteration++;
 
-        if (Math.abs(zCurr.magnitude() - zNextMagnitude) < EPSILON) {
+        if (Math.abs(zCurrMagnitude - zNextMagnitude) < EPSILON) {
             return new FractalResult(c, iteration, false, "magnitude less then " + EPSILON);
         }
 
@@ -53,7 +53,7 @@ log.debug("from {} + {}i step {} stepsX={} stepsY={}", fromTopLeftX, fromTopLeft
             return new FractalResult(c, iteration, false, "iteration greater then " + MAX_ITERATIONS);
         }
 
-        return calculate(zNext, c, iteration);
+        return calculate(zNext, zNextMagnitude, c, iteration);
 
     }
 

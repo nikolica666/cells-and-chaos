@@ -33,10 +33,10 @@ public class JuliaLogic {
     }
 
     public FractalResult calculate(ComplexNumber c) {
-        return calculate(c, pivot, 0);
+        return calculate(c, c.magnitude(), pivot, 0);
     }
 
-    public FractalResult calculate(ComplexNumber zCurr, ComplexNumber c, int iteration) {
+    public FractalResult calculate(ComplexNumber zCurr, double zCurrMagnitude, ComplexNumber c, int iteration) {
 
         ComplexNumber zNext = zCurr.sq().add(c);
         double zNextMagnitude = zNext.magnitude();
@@ -47,7 +47,7 @@ public class JuliaLogic {
 
         iteration++;
 
-        if (Math.abs(zCurr.magnitude() - zNextMagnitude) < EPSILON) {
+        if (Math.abs(zCurrMagnitude - zNextMagnitude) < EPSILON) {
             return new FractalResult(c, iteration, false, "magnitude less then " + EPSILON);
         }
 
@@ -55,7 +55,7 @@ public class JuliaLogic {
             return new FractalResult(c, iteration, false, "iteration greater then " + MAX_ITERATIONS);
         }
 
-        return calculate(zNext, c, iteration);
+        return calculate(zNext, zNextMagnitude, c, iteration);
 
     }
 
