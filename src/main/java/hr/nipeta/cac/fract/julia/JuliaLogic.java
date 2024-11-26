@@ -42,18 +42,18 @@ public class JuliaLogic {
         double zNextMagnitude = zNext.magnitude();
 
         if (zNext.magnitude() > MAX_MAGNITUDE) {
-            return new FractalResult(c, iteration, true, null);
+            return FractalResult.diverged(c, iteration);
         }
 
-        iteration++;
-
         if (Math.abs(zCurrMagnitude - zNextMagnitude) < EPSILON) {
-            return new FractalResult(c, iteration, false, "magnitude less then " + EPSILON);
+            return FractalResult.converged(c, iteration, "Magnitude difference less then " + EPSILON);
         }
 
         if (iteration >= MAX_ITERATIONS) {
-            return new FractalResult(c, iteration, false, "iteration greater then " + MAX_ITERATIONS);
+            return FractalResult.converged(c, iteration, "Iteration > max " + MAX_ITERATIONS);
         }
+
+        iteration++;
 
         return calculate(zNext, zNextMagnitude, c, iteration);
 

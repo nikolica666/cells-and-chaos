@@ -8,6 +8,7 @@ import hr.nipeta.cac.model.ComplexNumber;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.GestureEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -68,19 +69,30 @@ public class JuliaSceneBuilder extends SceneBuilder {
 
     }
 
-    private void handleMousePressed(MouseEvent e, GraphicsContext gc) {
+    private void recalculateCenter(GestureEvent e) {
+        recalculateCenter(e.getX(), e.getY());
+    }
 
-        log.debug("{} on x={}, y={}", e.getEventType(), e.getX(),e.getY());
+    private void recalculateCenter(MouseEvent e) {
+        recalculateCenter(e.getX(), e.getY());
+    }
 
-        double pixelsToCenterX = (double)canvasPixelsX / 2 - e.getX();
-        double pixelsToCenterY = (double)canvasPixelsY / 2 - e.getY();
+    // TODO Needs refactoring and generalisation
+    private void recalculateCenter(double eventX, double eventY) {
 
-        log.debug("pixelsToCenterX={}, pixelsToCenterY={}", pixelsToCenterX,pixelsToCenterY);
+        double pixelsToCenterX = (double)canvasPixelsX / 2 - eventX;
+        double pixelsToCenterY = (double)canvasPixelsY / 2 - eventY;
 
         double realPart = currentCenter.getX() - pixelsToCenterX * step;
         double imaginaryPart = currentCenter.getY() + pixelsToCenterY * step;
 
         currentCenter = ComplexNumber.xy(realPart, imaginaryPart);
+
+    }
+
+    private void handleMousePressed(MouseEvent e, GraphicsContext gc) {
+
+        recalculateCenter(e);
 
         switch (e.getButton()) {
             case PRIMARY -> {

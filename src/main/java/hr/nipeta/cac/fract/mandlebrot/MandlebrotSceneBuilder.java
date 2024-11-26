@@ -4,9 +4,11 @@ import hr.nipeta.cac.Main;
 import hr.nipeta.cac.SceneBuilder;
 import hr.nipeta.cac.fract.model.FractalResult;
 import hr.nipeta.cac.model.ComplexNumber;
+import hr.nipeta.cac.model.Coordinates;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.GestureEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.StackPane;
@@ -54,36 +56,50 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
     }
 
     private void handleScroll(ScrollEvent e, GraphicsContext gc) {
+
         double deltaY = e.getDeltaY();
 
         if (deltaY == 0) {
             log.debug("Ignoring {} because deltaY == 0", e.getEventType());
+            return;
         }
 
-        // Zoom in or out based on the scroll direction
+        recalculateCenter(e);
+
         if (deltaY > 0) {
             step = step / 2;  // Zoom in
-        } else if (deltaY < 0){
-            step = step * 2;  // Zoom out
         } else {
-            return;
+            step = step * 2;  // Zoom out
         }
 
         calculateAndDraw(gc, currentCenter, step, canvasPixelsX, canvasPixelsY);
 
-        e.consume();
-
     }
 
-    private void handleMousePressed(MouseEvent e, GraphicsContext gc) {
+    private void recalculateCenter(GestureEvent e) {
+        recalculateCenter(e.getX(), e.getY());
+    }
 
-        double pixelsToCenterX = (double)canvasPixelsX / 2 - e.getX();
-        double pixelsToCenterY = (double)canvasPixelsY / 2 - e.getY();
+    private void recalculateCenter(MouseEvent e) {
+        recalculateCenter(e.getX(), e.getY());
+    }
+
+    // TODO Needs refactoring and generalisation
+    private void recalculateCenter(double x, double y) {
+
+        double pixelsToCenterX = (double)canvasPixelsX / 2 - x;
+        double pixelsToCenterY = (double)canvasPixelsY / 2 - y;
 
         double realPart = currentCenter.getX() - pixelsToCenterX * step;
         double imaginaryPart = currentCenter.getY() + pixelsToCenterY * step;
 
         currentCenter = ComplexNumber.xy(realPart, imaginaryPart);
+
+    }
+
+    private void handleMousePressed(MouseEvent e, GraphicsContext gc) {
+
+        recalculateCenter(e);
 
         switch (e.getButton()) {
             case PRIMARY -> {

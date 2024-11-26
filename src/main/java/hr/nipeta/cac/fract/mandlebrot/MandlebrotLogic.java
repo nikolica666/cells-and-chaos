@@ -31,7 +31,24 @@ log.debug("from {} + {}i step {} stepsX={} stepsY={}", fromTopLeftX, fromTopLeft
     }
 
     public FractalResult calculate(ComplexNumber c) {
+
+        if (insideMainCardioid(c)) {
+            FractalResult.converged(c, 0, "Inside main cardioid");
+        }
+
+        if (insideLeftCircle(c)) {
+            FractalResult.converged(c, 0, "Inside left circle (period-2 bulb)");
+        }
+
         return calculate(ComplexNumber.ZERO, 0, c, 0);
+    }
+
+    private boolean insideMainCardioid(ComplexNumber c) {
+        return false;
+    }
+
+    private boolean insideLeftCircle(ComplexNumber c) {
+        return false;
     }
 
     public FractalResult calculate(ComplexNumber zCurr, double zCurrMagnitude, ComplexNumber c, int iteration) {
@@ -40,18 +57,18 @@ log.debug("from {} + {}i step {} stepsX={} stepsY={}", fromTopLeftX, fromTopLeft
         double zNextMagnitude = zNext.magnitude();
 
         if (zNextMagnitude > MAX_MAGNITUDE) {
-            return new FractalResult(c, iteration, true, null);
+            FractalResult.diverged(c, iteration);
         }
 
-        iteration++;
-
         if (Math.abs(zCurrMagnitude - zNextMagnitude) < EPSILON) {
-            return new FractalResult(c, iteration, false, "magnitude less then " + EPSILON);
+            return FractalResult.converged(c, iteration, "Magnitude difference less then " + EPSILON);
         }
 
         if (iteration >= MAX_ITERATIONS) {
-            return new FractalResult(c, iteration, false, "iteration greater then " + MAX_ITERATIONS);
+            return FractalResult.converged(c, iteration, "Iteration > max " + MAX_ITERATIONS);
         }
+
+        iteration++;
 
         return calculate(zNext, zNextMagnitude, c, iteration);
 
