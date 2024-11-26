@@ -21,10 +21,10 @@ import java.util.Random;
 @Slf4j
 public class JuliaSceneBuilder extends SceneBuilder {
 
-    private int canvasPixelsX = 1001;
-    private int canvasPixelsY = 1001;
+    private int canvasPixelsX = 1200;
+    private int canvasPixelsY = 1200;
     private ComplexNumber currentCenter = ComplexNumber.ZERO;
-    private double step = 0.004;
+    private double step = 0.003;
 
     private ComplexNumber pivot;
 
@@ -72,8 +72,8 @@ public class JuliaSceneBuilder extends SceneBuilder {
 
         log.debug("{} on x={}, y={}", e.getEventType(), e.getX(),e.getY());
 
-        double pixelsToCenterX = (double)(canvasPixelsX - 1) / 2 - e.getX();
-        double pixelsToCenterY = (double)(canvasPixelsY - 1) / 2 - e.getY();
+        double pixelsToCenterX = (double)canvasPixelsX / 2 - e.getX();
+        double pixelsToCenterY = (double)canvasPixelsY / 2 - e.getY();
 
         log.debug("pixelsToCenterX={}, pixelsToCenterY={}", pixelsToCenterX,pixelsToCenterY);
 
@@ -97,8 +97,8 @@ public class JuliaSceneBuilder extends SceneBuilder {
 
     private void handleMouseMoved(MouseEvent e, GraphicsContext gc) {
 
-        double pixelsToCenterX = (double)(canvasPixelsX - 1) / 2 - e.getX();
-        double pixelsToCenterY = (double)(canvasPixelsY - 1) / 2 - e.getY();
+        double pixelsToCenterX = (double)canvasPixelsX / 2 - e.getX();
+        double pixelsToCenterY = (double)canvasPixelsY / 2 - e.getY();
 
         double realPart = currentCenter.getX() - pixelsToCenterX * step;
         double imaginaryPart = currentCenter.getY() + pixelsToCenterY * step;
@@ -122,8 +122,8 @@ public class JuliaSceneBuilder extends SceneBuilder {
 
         FractalResult[][] fractalResults = new JuliaLogic(pivot)
                 .calculateGrid(
-                        center.getX() - (double)(pixelsX - 1) / 2 * step,
-                        center.getY() + (double)(pixelsY - 1) / 2 * step,
+                        center.getX() - (double)pixelsX / 2 * step,
+                        center.getY() + (double)pixelsY / 2 * step,
                         step,
                         pixelsX,
                         pixelsY);
