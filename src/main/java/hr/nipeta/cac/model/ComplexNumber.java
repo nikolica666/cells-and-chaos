@@ -6,6 +6,7 @@ public class ComplexNumber extends Coordinates<Double> {
 
     public static final ComplexNumber MINUS_ONE = new ComplexNumber(-1,0);
     public static final ComplexNumber ZERO = new ComplexNumber(0,0);
+    public static final ComplexNumber ONE = new ComplexNumber(0,1);
 
     public static ComplexNumber parse(String realPlusImaginaryI) {
         return new ComplexNumber(realPlusImaginaryI);
@@ -110,7 +111,11 @@ public class ComplexNumber extends Coordinates<Double> {
     }
 
     public double magnitude() {
-        return Math.sqrt(x * x + y * y);
+        return Math.sqrt(magnitudeSq());
+    }
+
+    public double magnitudeSq() {
+        return x * x + y * y;
     }
 
     public ComplexNumber conjugate() {

@@ -4,7 +4,6 @@ import hr.nipeta.cac.Main;
 import hr.nipeta.cac.SceneBuilder;
 import hr.nipeta.cac.fract.model.FractalResult;
 import hr.nipeta.cac.model.ComplexNumber;
-import hr.nipeta.cac.model.Coordinates;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -17,6 +16,8 @@ import javafx.scene.text.Font;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -48,6 +49,10 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
         tooltipCanvas.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> handleMousePressed(e, fractalGc));
         tooltipCanvas.addEventHandler(ScrollEvent.SCROLL, event -> handleScroll(event, fractalGc));
 
+        fractalGc.clearRect(0, 0, canvasPixelsX, canvasPixelsY);
+        fractalGc.setFill(Color.BLACK);
+        fractalGc.fillRect(0, 0, canvasPixelsX, canvasPixelsY);
+
         calculateAndDraw(fractalGc, currentCenter, step, canvasPixelsX, canvasPixelsY);
 
         StackPane root = new StackPane(fractalCanvas, tooltipCanvas);
@@ -64,7 +69,7 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
             return;
         }
 
-        recalculateCenter(e);
+        currentCenter = recalculateCenter(e);
 
         if (deltaY > 0) {
             step = step / 2;  // Zoom in
@@ -76,30 +81,30 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
 
     }
 
-    private void recalculateCenter(GestureEvent e) {
-        recalculateCenter(e.getX(), e.getY());
+    private ComplexNumber recalculateCenter(GestureEvent e) {
+        return recalculateCenter(e.getX(), e.getY(), canvasPixelsX, canvasPixelsY);
     }
 
-    private void recalculateCenter(MouseEvent e) {
-        recalculateCenter(e.getX(), e.getY());
+    private ComplexNumber recalculateCenter(MouseEvent e) {
+        return recalculateCenter(e.getX(), e.getY(), canvasPixelsX, canvasPixelsY);
     }
 
     // TODO Needs refactoring and generalisation
-    private void recalculateCenter(double x, double y) {
+    private ComplexNumber recalculateCenter(double pointX, double pointY, int totalPixelsX, int totalPixelsY) {
 
-        double pixelsToCenterX = (double)canvasPixelsX / 2 - x;
-        double pixelsToCenterY = (double)canvasPixelsY / 2 - y;
+        double pixelsToCenterX = (double)totalPixelsX / 2 - pointX;
+        double pixelsToCenterY = (double)totalPixelsY / 2 - pointY;
 
         double realPart = currentCenter.getX() - pixelsToCenterX * step;
         double imaginaryPart = currentCenter.getY() + pixelsToCenterY * step;
 
-        currentCenter = ComplexNumber.xy(realPart, imaginaryPart);
+        return ComplexNumber.xy(realPart, imaginaryPart);
 
     }
 
     private void handleMousePressed(MouseEvent e, GraphicsContext gc) {
 
-        recalculateCenter(e);
+        currentCenter = recalculateCenter(e);
 
         switch (e.getButton()) {
             case PRIMARY -> {
