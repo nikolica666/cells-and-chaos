@@ -8,6 +8,7 @@ import hr.nipeta.cac.collatz.CollatzSceneBuilder;
 import hr.nipeta.cac.fract.julia.JuliaSceneBuilder;
 import hr.nipeta.cac.fract.mandlebrot.MandlebrotSceneBuilder;
 import hr.nipeta.cac.gol.GolSceneBuilder;
+import hr.nipeta.cac.lsystem.LSystemSceneBuilder;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -30,7 +31,8 @@ public class WelcomeSceneBuilder extends SceneBuilder {
                 createSceneChangeButton("Langton's Ant", new LangtonAntSceneBuilder(main)),
                 createSceneChangeButton("Collatz conjecture",new CollatzSceneBuilder(main)),
                 createSceneChangeButton("M", new MandlebrotSceneBuilder(main)),
-                createSceneChangeButton("J", new JuliaSceneBuilder(main))
+                createSceneChangeButton("J", new JuliaSceneBuilder(main)),
+                createSceneChangeButton("L-System", new LSystemSceneBuilder(main))
         );
 
         box.setPadding(new Insets(10));
