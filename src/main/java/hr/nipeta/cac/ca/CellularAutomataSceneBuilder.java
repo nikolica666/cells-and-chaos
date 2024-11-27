@@ -22,12 +22,12 @@ import java.util.Random;
 @Slf4j
 public class CellularAutomataSceneBuilder extends SceneBuilder {
 
-    private static final int GRID_SIZE_X = 128;
-    private static final int GRID_SIZE_Y = 64;
+    private static final int GRID_SIZE_X = 2200;
+    private static final int GRID_SIZE_Y = 1100;
 
     private static CellularAutomataLogic caLogic;
 
-    private static final double RECT_SIZE = 12;
+    private static final double RECT_SIZE = 1;
     private static final double RECT_BORDER_WIDTH = 0;
     private static final double RECT_TOTAL_SIZE = RECT_SIZE + RECT_BORDER_WIDTH;
 
@@ -218,7 +218,9 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
 
         for (int row = 0; row < GRID_SIZE_Y; row++) {
             for (int col = 0; col < GRID_SIZE_X; col++) {
-                drawCell(gc, col, row);
+                if (caLogic.isAlive(row, col)) {
+                    drawCell(gc, col, row);
+                }
             }
         }
 
@@ -230,7 +232,7 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
         double y = row * RECT_TOTAL_SIZE;
 
         // Draw cell background
-        gc.setFill(caLogic.isAlive(row, col) ? Color.DARKGREEN : Color.WHEAT);
+        gc.setFill(Color.DARKGREEN);
         gc.fillRect(x, y, RECT_SIZE, RECT_SIZE);
 
     }
