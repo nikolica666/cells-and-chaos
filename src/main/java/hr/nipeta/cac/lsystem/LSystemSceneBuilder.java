@@ -2,7 +2,6 @@ package hr.nipeta.cac.lsystem;
 
 import hr.nipeta.cac.Main;
 import hr.nipeta.cac.SceneBuilder;
-import hr.nipeta.cac.ca.CellularAutomataLogic;
 import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -17,7 +16,10 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class LSystemSceneBuilder extends SceneBuilder {
 
@@ -30,8 +32,6 @@ public class LSystemSceneBuilder extends SceneBuilder {
 
     private static final int GRID_SIZE_X = 128;
     private static final int GRID_SIZE_Y = 64;
-
-    private static CellularAutomataLogic caLogic;
 
     private static final double RECT_SIZE = 12;
     private static final double RECT_BORDER_WIDTH = 0;
