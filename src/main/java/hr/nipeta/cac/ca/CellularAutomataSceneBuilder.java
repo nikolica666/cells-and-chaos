@@ -215,6 +215,8 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
 
         // Clear the canvas before redrawing
         gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
+        gc.setFill(Color.WHEAT);
+        gc.fillRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
 
         for (int row = 0; row < GRID_SIZE_Y; row++) {
             for (int col = 0; col < GRID_SIZE_X; col++) {
