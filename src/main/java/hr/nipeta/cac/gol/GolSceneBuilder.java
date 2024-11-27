@@ -32,12 +32,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GolSceneBuilder extends SceneBuilder {
 
-    private static final int GRID_SIZE_X = 450;
-    private static final int GRID_SIZE_Y = 225;
+    private static final int GRID_SIZE_X = 200;
+    private static final int GRID_SIZE_Y = 100;
 
     private static GolLogic golLogic;
 
-    private static final double RECT_SIZE = 4;
+    private static final double RECT_SIZE = 10;
     private static final double RECT_BORDER_WIDTH = 1;
     private static final double RECT_TOTAL_SIZE = RECT_SIZE + RECT_BORDER_WIDTH;
 
