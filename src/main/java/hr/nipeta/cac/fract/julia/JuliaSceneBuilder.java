@@ -5,12 +5,18 @@ import hr.nipeta.cac.SceneBuilder;
 import hr.nipeta.cac.fract.mandlebrot.MandlebrotLogic;
 import hr.nipeta.cac.fract.model.FractalResult;
 import hr.nipeta.cac.model.ComplexNumber;
+import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Button;
 import javafx.scene.input.GestureEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import lombok.extern.slf4j.Slf4j;
@@ -64,9 +70,24 @@ public class JuliaSceneBuilder extends SceneBuilder {
 
         calculateAndDraw(fractalGc, currentCenter,step,canvasPixelsX, canvasPixelsY);
 
-        StackPane root = new StackPane(fractalCanvas, tooltipCanvas);
-        return new Scene(root, canvasPixelsX, canvasPixelsY);
+        StackPane stackedCanvas = new StackPane(fractalCanvas, tooltipCanvas);
 
+        Region parent = new VBox(mainMenu(), stackedCanvas);
+        parent.setPadding(new Insets(10));
+        return new Scene(parent);
+
+    }
+
+    private Node mainMenu() {
+        return horizontalMenu(
+                welcomeScreenButton()
+        );
+    }
+
+    private Button welcomeScreenButton() {
+        return createButton(
+                "Main menu",
+                e -> createScene(() -> new WelcomeSceneBuilder(main)));
     }
 
     private void recalculateCenter(GestureEvent e) {

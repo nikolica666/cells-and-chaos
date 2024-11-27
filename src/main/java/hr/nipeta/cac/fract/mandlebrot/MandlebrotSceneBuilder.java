@@ -4,13 +4,19 @@ import hr.nipeta.cac.Main;
 import hr.nipeta.cac.SceneBuilder;
 import hr.nipeta.cac.fract.model.FractalResult;
 import hr.nipeta.cac.model.ComplexNumber;
+import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Button;
 import javafx.scene.input.GestureEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import lombok.extern.slf4j.Slf4j;
@@ -24,10 +30,15 @@ import java.util.stream.IntStream;
 @Slf4j
 public class MandlebrotSceneBuilder extends SceneBuilder {
 
+    // Interesting point -0.15985113725373606 + 1.0465216943636952i step 1.1368683772161603E-15 stepsX=1500 stepsY=1000
+
     private int canvasPixelsX = 1500;
     private int canvasPixelsY = 1000;
     private ComplexNumber currentCenter = ComplexNumber.MINUS_ONE;
     private double step = 0.0025;
+
+    private Canvas fractalCanvas;
+    private Canvas tooltipCanvas;
 
     public MandlebrotSceneBuilder(Main main) {
         super(main);
@@ -36,11 +47,11 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
     @Override
     public Scene createContent() {
 
-        Canvas fractalCanvas = new Canvas(canvasPixelsX, canvasPixelsY);
+        fractalCanvas = new Canvas(canvasPixelsX, canvasPixelsY);
         GraphicsContext fractalGc = fractalCanvas.getGraphicsContext2D();
         fractalGc.setFill(Color.TRANSPARENT);
 
-        Canvas tooltipCanvas = new Canvas(canvasPixelsX, canvasPixelsY);
+        tooltipCanvas = new Canvas(canvasPixelsX, canvasPixelsY);
         GraphicsContext tooltipGc = tooltipCanvas.getGraphicsContext2D();
         tooltipGc.setFont(new Font(16));
 
@@ -55,9 +66,24 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
 
         calculateAndDraw(fractalGc, currentCenter, step, canvasPixelsX, canvasPixelsY);
 
-        StackPane root = new StackPane(fractalCanvas, tooltipCanvas);
-        return new Scene(root, canvasPixelsX, canvasPixelsY);
+        StackPane stackedCanvas = new StackPane(fractalCanvas, tooltipCanvas);
 
+        Region parent = new VBox(10, mainMenu(), stackedCanvas);
+        parent.setPadding(new Insets(10));
+        return new Scene(parent);
+
+    }
+
+    private Node mainMenu() {
+        return horizontalMenu(
+                welcomeScreenButton()
+        );
+    }
+
+    private Button welcomeScreenButton() {
+        return createButton(
+                "Main menu",
+                e -> createScene(() -> new WelcomeSceneBuilder(main)));
     }
 
     private void handleScroll(ScrollEvent e, GraphicsContext gc) {
@@ -99,6 +125,15 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
         double imaginaryPart = currentCenter.getY() + pixelsToCenterY * step;
 
         return ComplexNumber.xy(realPart, imaginaryPart);
+
+    }
+
+    public void zoomInManually(int times, ComplexNumber newCenter) {
+
+        currentCenter = newCenter;
+        step = Math.pow(step, times);
+
+        calculateAndDraw(fractalCanvas.getGraphicsContext2D(), currentCenter, step, canvasPixelsX, canvasPixelsY);
 
     }
 
