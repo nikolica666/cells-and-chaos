@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.stream.IntStream;
+
 @Slf4j
 public class MandlebrotLogic {
 
@@ -26,11 +28,11 @@ public class MandlebrotLogic {
 
         FractalResult[][] result = new FractalResult[stepsX][stepsY];
 
-        for (int i = 0; i < stepsX; i++) {
+        IntStream.range(0, stepsX).parallel().forEach(i -> {
             for (int j = 0; j < stepsY; j++) {
                 result[i][j] = calculate(ComplexNumber.xy(fromTopLeftX + i * step, fromTopLeftY - j * step));
             }
-        }
+        });
 
         log.debug("calculated grid in {}ms", (System.currentTimeMillis() - milli));
         return result;
