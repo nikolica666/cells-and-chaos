@@ -24,6 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Slf4j
 public class JuliaSceneBuilder extends SceneBuilder {
@@ -173,13 +175,17 @@ public class JuliaSceneBuilder extends SceneBuilder {
             for (int y = 0; y < pixelsY; y++) {
                 FractalResult point = fractalResults[x][y];
                 if (point.isDiverged()) {
-                    Color color = Color.rgb((int)(point.getIterations() / JuliaLogic.MAX_ITERATIONS * 255), 0, 0);
+                    Color color = COLORS_RED.get(point.getIterations());
                     pixelWriter.setColor(x, y, color);
                 }
             }
         }
 
     }
+
+    public static final List<Color> COLORS_RED = IntStream.range(0, 256)
+            .mapToObj(i -> Color.rgb(i, 0, 0)) // Example gradient
+            .collect(Collectors.toList());
 
 }
 

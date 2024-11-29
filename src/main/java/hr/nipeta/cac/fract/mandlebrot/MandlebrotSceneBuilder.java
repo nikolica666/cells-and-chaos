@@ -2,6 +2,7 @@ package hr.nipeta.cac.fract.mandlebrot;
 
 import hr.nipeta.cac.Main;
 import hr.nipeta.cac.SceneBuilder;
+import hr.nipeta.cac.fract.julia.JuliaLogic;
 import hr.nipeta.cac.fract.model.FractalResult;
 import hr.nipeta.cac.model.ComplexNumber;
 import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
@@ -199,6 +200,9 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
             for (int y = 0; y < pixelsY; y++) {
                 FractalResult point = fractalResults[x][y];
                 if (point.isDiverged()) {
+                    // TODO ideas for better colors
+                    //  Color color = Color.hsb((double)point.getIterations() / MandlebrotLogic.MAX_ITERATIONS * 180, .7, .7); // HSB color model
+                    //  Color color = Color.color((double)point.getIterations() / MandlebrotLogic.MAX_ITERATIONS, 0, 0); // more then 255 red shades
                     Color color = COLORS_RED.get(point.getIterations());
                     pixelWriter.setColor(x, y, color);
                 }
