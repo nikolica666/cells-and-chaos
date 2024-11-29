@@ -17,7 +17,8 @@ public class JuliaLogic {
     public static final short MAX_MAGNITUDE = 2;
     // So we don't need to calculate SQRT for magmitude
     public static final short MAX_MAGNITUDE_SQUARED = MAX_MAGNITUDE * MAX_MAGNITUDE;
-    public static final double EPSILON = 1e-9;
+    public static final double EPSILON = 1e-7;
+    public static final double EPSILON_SQUARED = EPSILON * EPSILON;
 
     public FractalResult[][] calculateGrid(double fromTopLeftX, double fromTopLeftY, double step, int stepsX, int stepsY) {
 
@@ -49,7 +50,7 @@ public class JuliaLogic {
             return FractalResult.diverged(c, iteration);
         }
 
-        if (Math.abs(zCurrMagnitudeSquared - zNextMagnitudeSquared) < EPSILON) {
+        if (Math.abs(zCurrMagnitudeSquared - zNextMagnitudeSquared) < EPSILON_SQUARED) {
             return FractalResult.converged(c, iteration, "Magnitude difference less then " + EPSILON);
         }
 
