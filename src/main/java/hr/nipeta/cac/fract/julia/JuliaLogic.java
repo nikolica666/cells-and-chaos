@@ -14,7 +14,9 @@ public class JuliaLogic {
     private final ComplexNumber pivot;
 
     public static final double MAX_ITERATIONS = 255;
-    public static final double MAX_MAGNITUDE = 2;
+    public static final short MAX_MAGNITUDE = 2;
+    // So we don't need to calculate SQRT for magmitude
+    public static final short MAX_MAGNITUDE_SQUARED = MAX_MAGNITUDE * MAX_MAGNITUDE;
     public static final double EPSILON = 1e-9;
 
     public FractalResult[][] calculateGrid(double fromTopLeftX, double fromTopLeftY, double step, int stepsX, int stepsY) {
@@ -35,19 +37,19 @@ public class JuliaLogic {
     }
 
     public FractalResult calculate(ComplexNumber c) {
-        return calculate(c, c.magnitude(), pivot, 0);
+        return calculate(c, c.magnitudeSq(), pivot, 0);
     }
 
-    public FractalResult calculate(ComplexNumber zCurr, double zCurrMagnitude, ComplexNumber c, int iteration) {
+    public FractalResult calculate(ComplexNumber zCurr, double zCurrMagnitudeSquared, ComplexNumber c, int iteration) {
 
         ComplexNumber zNext = zCurr.sq().add(c);
-        double zNextMagnitude = zNext.magnitude();
+        double zNextMagnitudeSquared = zNext.magnitudeSq();
 
-        if (zNext.magnitude() > MAX_MAGNITUDE) {
+        if (zNextMagnitudeSquared > MAX_MAGNITUDE_SQUARED) {
             return FractalResult.diverged(c, iteration);
         }
 
-        if (Math.abs(zCurrMagnitude - zNextMagnitude) < EPSILON) {
+        if (Math.abs(zCurrMagnitudeSquared - zNextMagnitudeSquared) < EPSILON) {
             return FractalResult.converged(c, iteration, "Magnitude difference less then " + EPSILON);
         }
 
@@ -57,7 +59,7 @@ public class JuliaLogic {
 
         iteration++;
 
-        return calculate(zNext, zNextMagnitude, c, iteration);
+        return calculate(zNext, zNextMagnitudeSquared, c, iteration);
 
     }
 
