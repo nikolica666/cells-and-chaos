@@ -164,6 +164,7 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
 
         gc.setFill(Color.WHEAT);
         gc.clearRect(0, 0, canvasPixelsX, canvasPixelsY);
+        gc.setFont(Main.regularFont);
         gc.fillText(
                 String.format("pixel (%s,%s)\r\nto center (%s,%s)\r\n%f+%fi",
                         e.getX(),
