@@ -6,6 +6,7 @@ import hr.nipeta.cac.ant.LangtonAntSceneBuilder;
 import hr.nipeta.cac.ca.CellularAutomataSceneBuilder;
 import hr.nipeta.cac.collatz.CollatzSceneBuilder;
 import hr.nipeta.cac.fract.julia.JuliaSceneBuilder;
+import hr.nipeta.cac.fract.logistic.LogisticSceneBuilder;
 import hr.nipeta.cac.fract.mandlebrot.MandlebrotSceneBuilder;
 import hr.nipeta.cac.gol.GolSceneBuilder;
 import hr.nipeta.cac.lsystem.LSystemSceneBuilder;
@@ -32,7 +33,8 @@ public class WelcomeSceneBuilder extends SceneBuilder {
                 createSceneChangeButton("Collatz conjecture",new CollatzSceneBuilder(main)),
                 createSceneChangeButton("M", new MandlebrotSceneBuilder(main)),
                 createSceneChangeButton("J", new JuliaSceneBuilder(main)),
-                createSceneChangeButton("L-System", new LSystemSceneBuilder(main))
+                createSceneChangeButton("L-System", new LSystemSceneBuilder(main)),
+                createSceneChangeButton("Logistic map", new LogisticSceneBuilder(main))
         );
 
         box.setPadding(new Insets(10));
