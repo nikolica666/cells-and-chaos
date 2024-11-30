@@ -39,7 +39,6 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
     private TextField antRulesInput;
 
     private TextField timerDurationInput;
-    private boolean timerPlaying;
 
     private PeriodicAnimationTimer timer;
 
@@ -84,19 +83,17 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
 
     private Button startButton() {
         return createButton("Start", event -> {
-            if (!timerPlaying) {
+            if (!timer.isPlaying()) {
                 evolveAndDraw();
                 timer.start();
-                timerPlaying = true;
             }
         });
     }
 
     private Button stopButton() {
         return createButton("Stop", event -> {
-            if (timerPlaying) {
+            if (timer.isPlaying()) {
                 timer.stop();
-                timerPlaying = false;
             }
         });
     }
@@ -117,36 +114,37 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
     }
 
     private void onTimerDurationInputSubmit() {
-        String input = timerDurationInput.getText();
-        Integer msDuration = null;
+
+        final Integer msDuration = parseTimelineDurationInput(timerDurationInput.getText());
+
+        if (msDuration != null) {
+            timer.stopToExecuteThenRestart(() -> {
+                timer.setTimerDurationMs(msDuration);
+                timerDurationInput.setPromptText("" + msDuration);
+            });
+        }
+
+    }
+
+    private Integer parseTimelineDurationInput(String input) {
         try {
             int intInput = Integer.parseInt(input);
-            if (intInput < 10 || intInput > 30_000) {
-                showAlertError("Frequency must be between 10ms and 30000ms.");
+            if (intInput < 20 || intInput > 30_000) {
+                showAlertError("Frequency must be between 20ms and 30000ms.");
+                return null;
             } else {
-                msDuration = intInput;
+                return intInput;
             }
         } catch (NumberFormatException ex) {
             showAlertError("Invalid number. Please enter a valid number.");
-        }
-        if (msDuration != null) {
-            if (timerPlaying) {
-                timer.stop();
-                timerPlaying = false;
-            }
-            timer.setTimerDurationMs(msDuration);
-            timerDurationInput.setPromptText("" + msDuration);
-            if (!timerPlaying) {
-                timer.start();
-                timerPlaying = true;
-            }
+            return null;
         }
     }
 
     private Node antRulesInput() {
         antRulesInput = new TextField();
         antRulesInput.setPrefWidth(250);
-        antRulesInput.setPromptText("" + antRules);
+        antRulesInput.setPromptText(antRules);
         return onTextInputEnter(antRulesInput, this::onAntRulesInputSubmit);
     }
 

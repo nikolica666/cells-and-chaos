@@ -32,12 +32,8 @@ public class LogisticSceneBuilder extends SceneBuilder {
     private static final double RECT_TOTAL_SIZE = RECT_SIZE + RECT_BORDER_WIDTH;
 
     private TextField timelineDurationInput;
-    private boolean timelinePlaying;
 
     private PeriodicAnimationTimer timer;
-
-    private int rule;
-    private TextField ruleInput;
 
     private GraphicsContext gc;
 
@@ -53,10 +49,6 @@ public class LogisticSceneBuilder extends SceneBuilder {
         timelineDurationInput = new TextField();
         timelineDurationInput.setPrefWidth(150);
         timelineDurationInput.setPromptText("" + timer.getTimerDurationMs());
-
-        ruleInput = new TextField();
-        ruleInput.setPrefWidth(75);
-        ruleInput.setPromptText("" + rule);
 
         Region parent = new VBox(10, mainMenu(), caGridWrapped());
         parent.setPadding(new Insets(10));
@@ -77,10 +69,9 @@ public class LogisticSceneBuilder extends SceneBuilder {
 
     private Button startButton() {
         return createButton("Start", event -> {
-            if (!timelinePlaying) {
+            if (!timer.isPlaying()) {
                 evolveAndDraw();
                 timer.start();
-                timelinePlaying = true;
             }
         });
     }
@@ -90,9 +81,8 @@ public class LogisticSceneBuilder extends SceneBuilder {
     }
 
     private void stopTimeline() {
-        if (timelinePlaying) {
+        if (timer.isPlaying()) {
             timer.stop();
-            timelinePlaying = false;
         }
     }
 
@@ -122,15 +112,13 @@ public class LogisticSceneBuilder extends SceneBuilder {
             showAlertError("Invalid number. Please enter a valid number.");
         }
         if (msDuration != null) {
-            if (timelinePlaying) {
+            if (timer.isPlaying()) {
                 timer.stop();
-                timelinePlaying = false;
             }
             timer.setTimerDurationMs(msDuration);
             timelineDurationInput.setPromptText("" + msDuration);
-            if (!timelinePlaying) {
+            if (!timer.isPlaying()) {
                 timer.start();
-                timelinePlaying = true;
             }
         }
     }

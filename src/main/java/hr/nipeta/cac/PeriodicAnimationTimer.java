@@ -49,4 +49,34 @@ public class PeriodicAnimationTimer extends AnimationTimer {
         }
 
     }
+
+    @Getter
+    private boolean playing;
+
+    public void stopToExecuteThenRestart(Runnable runnable) {
+
+        if (this.isPlaying()) {
+            this.stop();
+        }
+
+        runnable.run();
+
+        if (!this.isPlaying()) {
+            this.start();
+        }
+
+    }
+
+    @Override
+    public void start() {
+        super.start();
+        this.playing = true;
+    }
+
+    @Override
+    public void stop() {
+        super.stop();
+        this.playing = false;
+    }
+
 }

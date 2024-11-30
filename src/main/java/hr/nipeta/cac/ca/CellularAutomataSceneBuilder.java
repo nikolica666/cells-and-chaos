@@ -32,7 +32,6 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
     private static final double RECT_TOTAL_SIZE = RECT_SIZE + RECT_BORDER_WIDTH;
 
     private TextField timelineDurationInput;
-    private boolean timelinePlaying;
 
     private PeriodicAnimationTimer timer;
 
@@ -84,19 +83,17 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
 
     private Button startButton() {
         return createButton("Start", event -> {
-            if (!timelinePlaying) {
+            if (!timer.isPlaying()) {
                 evolveAndDraw();
                 timer.start();
-                timelinePlaying = true;
             }
         });
     }
 
     private Button stopButton() {
         return createButton("Stop", event -> {
-            if (timelinePlaying) {
+            if (timer.isPlaying()) {
                 timer.stop();
-                timelinePlaying = false;
             }
         });
     }
@@ -114,29 +111,30 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
     }
 
     private void onTimelineDurationInputSubmit() {
-        String input = timelineDurationInput.getText();
-        Integer msDuration = null;
+
+        final Integer msDuration = parseTimelineDurationInput(timelineDurationInput.getText());
+
+        if (msDuration != null) {
+            timer.stopToExecuteThenRestart(() -> {
+                timer.setTimerDurationMs(msDuration);
+                timelineDurationInput.setPromptText("" + msDuration);
+            });
+        }
+
+    }
+
+    private Integer parseTimelineDurationInput(String input) {
         try {
             int intInput = Integer.parseInt(input);
             if (intInput < 20 || intInput > 30_000) {
                 showAlertError("Frequency must be between 20ms and 30000ms.");
+                return null;
             } else {
-                msDuration = intInput;
+                return intInput;
             }
         } catch (NumberFormatException ex) {
             showAlertError("Invalid number. Please enter a valid number.");
-        }
-        if (msDuration != null) {
-            if (timelinePlaying) {
-                timer.stop();
-                timelinePlaying = false;
-            }
-            timer.setTimerDurationMs(msDuration);
-            timelineDurationInput.setPromptText("" + msDuration);
-            if (!timelinePlaying) {
-                timer.start();
-                timelinePlaying = true;
-            }
+            return null;
         }
     }
 

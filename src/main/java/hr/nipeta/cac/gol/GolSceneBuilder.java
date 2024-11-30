@@ -47,7 +47,6 @@ public class GolSceneBuilder extends SceneBuilder {
 
     private PeriodicAnimationTimer timer;
     private TextField timelineDurationInput;
-    private boolean timelinePlaying;
 
     private Canvas canvas;
     private double scaleFactor = 1.0;
@@ -105,19 +104,17 @@ public class GolSceneBuilder extends SceneBuilder {
 
     private Button startButton() {
         return createButton("Start", event -> {
-            if (!timelinePlaying) {
+            if (!timer.isPlaying()) {
                 evolveAndDrawGrid();
                 timer.start();
-                timelinePlaying = true;
             }
         });
     }
 
     private Button stopButton() {
         return createButton("Stop", event -> {
-            if (timelinePlaying) {
+            if (timer.isPlaying()) {
                 timer.stop();
-                timelinePlaying = false;
             }
         });
     }
@@ -129,9 +126,8 @@ public class GolSceneBuilder extends SceneBuilder {
     private Node clearButton() {
         return createButton("Clear", event -> {
 
-            if (timelinePlaying) {
+            if (timer.isPlaying()) {
                 timer.stop();
-                timelinePlaying = false;
             }
 
             golLogic.setAllDead();
@@ -151,31 +147,30 @@ public class GolSceneBuilder extends SceneBuilder {
     }
 
     private void onTimelineDurationInputSubmit() {
-        String input = timelineDurationInput.getText();
-        Integer msDuration = null;
+
+        Integer msDuration = parseTimelineDurationInput(timelineDurationInput.getText());
+
+        if (msDuration != null) {
+            timer.stopToExecuteThenRestart(() -> {
+                timer.setTimerDurationMs(msDuration);
+                timelineDurationInput.setPromptText("" + msDuration);
+            });
+        }
+
+    }
+
+    private Integer parseTimelineDurationInput(String input) {
         try {
             int intInput = Integer.parseInt(input);
-            if (intInput < 5) {
-                showAlertError("Min frequency is 5ms.");
-            } else if (intInput > 30_000) {
-                showAlertError("Max frequency is 30000ms.");
+            if (intInput < 5 || intInput > 10_000) {
+                showAlertError("Frequency must be between 5ms and 10000ms.");
+                return null;
             } else {
-                msDuration = intInput;
+                return intInput;
             }
         } catch (NumberFormatException ex) {
             showAlertError("Invalid number. Please enter a valid number.");
-        }
-        if (msDuration != null) {
-            if (timelinePlaying) {
-                timer.stop();
-                timelinePlaying = false;
-            }
-            timer.setTimerDurationMs(msDuration);
-            timelineDurationInput.setPromptText("" + msDuration);
-            if (!timelinePlaying) {
-                timer.start();
-                timelinePlaying = true;
-            }
+            return null;
         }
     }
 

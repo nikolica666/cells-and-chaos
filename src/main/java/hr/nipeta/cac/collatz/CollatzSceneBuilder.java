@@ -6,7 +6,6 @@ import hr.nipeta.cac.SceneBuilder;
 import hr.nipeta.cac.collatz.rules.CollatzCell;
 import hr.nipeta.cac.model.Coordinates;
 import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
-import javafx.animation.AnimationTimer;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -23,7 +22,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 public class CollatzSceneBuilder extends SceneBuilder {
@@ -34,7 +36,6 @@ public class CollatzSceneBuilder extends SceneBuilder {
     private int collatzSequencesDrawIndex;
 
     private TextField timelineDurationInput;
-    private boolean timelinePlaying;
 
     private PeriodicAnimationTimer timer;
 
@@ -77,19 +78,17 @@ public class CollatzSceneBuilder extends SceneBuilder {
 
     private Button startButton() {
         return createButton("Start", event -> {
-            if (!timelinePlaying) {
+            if (!timer.isPlaying()) {
                 collatzSequencesDraw = createCollatzSequences(5,1_000);
                 timer.start();
-                timelinePlaying = true;
             }
         });
     }
 
     private Button stopButton() {
         return createButton("Stop", event -> {
-            if (timelinePlaying) {
+            if (timer.isPlaying()) {
                 timer.stop();
-                timelinePlaying = false;
             }
         });
     }
@@ -103,29 +102,30 @@ public class CollatzSceneBuilder extends SceneBuilder {
     }
 
     private void onTimelineDurationInputSubmit() {
-        String input = timelineDurationInput.getText();
-        Integer msDuration = null;
+
+        Integer msDuration = parseTimelineDurationInput(timelineDurationInput.getText());
+
+        if (msDuration != null) {
+            timer.stopToExecuteThenRestart(() -> {
+                timer.setTimerDurationMs(msDuration);
+                timelineDurationInput.setPromptText("" + msDuration);
+            });
+        }
+
+    }
+
+    private Integer parseTimelineDurationInput(String input) {
         try {
             int intInput = Integer.parseInt(input);
             if (intInput < 20 || intInput > 30_000) {
                 showAlertError("Frequency must be between 20ms and 30000ms.");
+                return null;
             } else {
-                msDuration = intInput;
+                return intInput;
             }
         } catch (NumberFormatException ex) {
             showAlertError("Invalid number. Please enter a valid number.");
-        }
-        if (msDuration != null) {
-            if (timelinePlaying) {
-                timer.stop();
-                timelinePlaying = false;
-            }
-            timer.setTimerDurationMs(msDuration);
-            timelineDurationInput.setPromptText("" + msDuration);
-            if (!timelinePlaying) {
-                timer.start();
-                timelinePlaying = true;
-            }
+            return null;
         }
     }
 
