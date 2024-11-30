@@ -52,43 +52,25 @@ public class LSystemSceneBuilder extends SceneBuilder {
     @Override
     protected Scene createContent() {
 
-        initRuleInput();
-        initAxiomInput();
+        ruleInput = createInput(rule, 200,
+                createTooltip("Rules should be in format variable1:rule1, variable2:rule2\r\ne.g. A:AB, B:BAcBdA"),
+                this::onRuleInputSubmit);
+
+        axiomInput = createInput(axiom, 200,
+                createTooltip("Axiom is starting point for evolving"),
+                this::onAxiomInputSubmit);
 
         Region parent = new VBox(10, mainMenu(), caGridWrapped());
         parent.setPadding(new Insets(10));
         return new Scene(parent);
     }
 
-    private void initRuleInput() {
-        ruleInput = new TextField();
-        ruleInput.setPrefWidth(200);
-        ruleInput.setTooltip(createTooltip("Rules should be in format variable1:rule1, variable2:rule2 "));
-    }
-
-    private void initAxiomInput() {
-        axiomInput = new TextField();
-        axiomInput.setPrefWidth(200);
-        axiomInput.setPromptText(axiom);
-        axiomInput.setTooltip(createTooltip("Axiom is starting point for evolving"));
-    }
-
     private Node mainMenu() {
         return horizontalMenu(
-                ruleInput(),
-                ruleButton(),
-                axiomInput(),
-                axiomButton(),
+                ruleInput,
+                axiomInput,
                 welcomeScreenButton()
         );
-    }
-
-    private Node ruleInput() {
-        return onTextInputEnter(ruleInput, this::onRuleInputSubmit);
-    }
-
-    private Node ruleButton() {
-        return createButton("Set rule", event -> onRuleInputSubmit());
     }
 
     private void onRuleInputSubmit() {
@@ -107,7 +89,7 @@ public class LSystemSceneBuilder extends SceneBuilder {
         // We expect A:ABBA,B:AA[B] format, so check ":"
         for (String varWithRule : inputSplit) {
 
-            String[] varWithRuleSplit = varWithRule.split(":");
+            String[] varWithRuleSplit = varWithRule.replaceAll("\\s+", "").split(":");
 
             if (varWithRuleSplit.length != 2) {
                 showAlertError("Expected format is 'A:ABBA,B:A[]BB' and similar, you entered " + varWithRule);
@@ -136,14 +118,6 @@ public class LSystemSceneBuilder extends SceneBuilder {
             drawGrid(gc);
         }
 
-    }
-
-    private Node axiomInput() {
-        return onTextInputEnter(axiomInput, this::onAxiomInputSubmit);
-    }
-
-    private Node axiomButton() {
-        return createButton("Set axiom", event -> onAxiomInputSubmit());
     }
 
     private void onAxiomInputSubmit() {
