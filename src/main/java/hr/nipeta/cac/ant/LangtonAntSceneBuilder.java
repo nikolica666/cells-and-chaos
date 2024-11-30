@@ -1,11 +1,11 @@
 package hr.nipeta.cac.ant;
 
 import hr.nipeta.cac.Main;
+import hr.nipeta.cac.PeriodicAnimationTimer;
 import hr.nipeta.cac.SceneBuilder;
 import hr.nipeta.cac.model.Coordinates;
 import hr.nipeta.cac.model.IntCoordinates;
 import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
-import javafx.animation.AnimationTimer;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -31,18 +31,17 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
 
     private static LangtonAntLogic antLogic;
 
-    private static final double RECT_SIZE = 8;
+    private static final double RECT_SIZE = 11;
     private static final double RECT_BORDER_WIDTH = 0;
     private static final double RECT_TOTAL_SIZE = RECT_SIZE + RECT_BORDER_WIDTH;
 
     private String antRules;
     private TextField antRulesInput;
 
-    private double timerDuration;
     private TextField timerDurationInput;
     private boolean timerPlaying;
 
-    private AnimationTimer timer;
+    private PeriodicAnimationTimer timer;
 
     private long counter;
     private Label counterLabel;
@@ -62,29 +61,7 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
         antLogic = new LangtonAntLogic(GRID_SIZE_X, GRID_SIZE_Y);
         antLogic.init(antRules);
 
-        timerDuration = 25;
-
-        timer = new AnimationTimer() {
-            long lastUpdate = 0;
-
-            @Override
-            public void handle(long now) {
-
-                if (lastUpdate == 0) {
-                    lastUpdate = now;
-                    return;
-                }
-
-                double delta = (now - lastUpdate) / 1e6; // milliseconds since last frame
-
-                if (delta > timerDuration) {
-                    log.debug("Timer duration is {}ms", timerDuration);
-                    lastUpdate = now;
-                    evolveAndDraw();
-                }
-
-            }
-        };
+        timer = PeriodicAnimationTimer.every(20).execute(this::evolveAndDraw);
 
         Region parent = new VBox(10, mainMenu(), antGridWrapped());
         parent.setPadding(new Insets(10));
@@ -131,7 +108,7 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
     private Node timerDurationInput() {
         timerDurationInput = new TextField();
         timerDurationInput.setPrefWidth(150);
-        timerDurationInput.setPromptText("" + timerDuration);
+        timerDurationInput.setPromptText("" + timer.getTimerDurationMs());
         return onTextInputEnter(timerDurationInput, this::onTimerDurationInputSubmit);
     }
 
@@ -157,7 +134,7 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
                 timer.stop();
                 timerPlaying = false;
             }
-            timerDuration = msDuration;
+            timer.setTimerDurationMs(msDuration);
             timerDurationInput.setPromptText("" + msDuration);
             if (!timerPlaying) {
                 timer.start();

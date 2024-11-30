@@ -1,6 +1,7 @@
 package hr.nipeta.cac.collatz;
 
 import hr.nipeta.cac.Main;
+import hr.nipeta.cac.PeriodicAnimationTimer;
 import hr.nipeta.cac.SceneBuilder;
 import hr.nipeta.cac.collatz.rules.CollatzCell;
 import hr.nipeta.cac.model.Coordinates;
@@ -32,11 +33,10 @@ public class CollatzSceneBuilder extends SceneBuilder {
     private Map<Long, CollatzSequenceDraw<Boolean>> collatzSequencesDraw;
     private int collatzSequencesDrawIndex;
 
-    private double timeLineDuration;
     private TextField timelineDurationInput;
     private boolean timelinePlaying;
 
-    private AnimationTimer timer;
+    private PeriodicAnimationTimer timer;
 
     private Canvas canvas;
 
@@ -49,31 +49,11 @@ public class CollatzSceneBuilder extends SceneBuilder {
 
         collatzLogic = new CollatzLogic();
 
-        timeLineDuration = 10;
+        timer = PeriodicAnimationTimer.every(10).execute(this::drawCollatzSequences);
 
         timelineDurationInput = new TextField();
         timelineDurationInput.setPrefWidth(150);
-        timelineDurationInput.setPromptText("" + timeLineDuration);
-        Timer t;
-        timer = new AnimationTimer() {
-            long lastUpdate = 0;
-
-            @Override
-            public void handle(long now) {
-                if (lastUpdate == 0) {
-                    lastUpdate = now;
-                    return;
-                }
-
-                double delta = (now - lastUpdate) / 1e6; // milliseconds since last frame
-
-                if (delta > timeLineDuration) {
-                    lastUpdate = now;
-                    drawCollatzSequences();
-                }
-
-            }
-        };
+        timelineDurationInput.setPromptText("" + timer.getTimerDurationMs());
 
         canvas = new Canvas(1600, 1200);
         StackPane wrapper = new StackPane(canvas);
@@ -140,8 +120,8 @@ public class CollatzSceneBuilder extends SceneBuilder {
                 timer.stop();
                 timelinePlaying = false;
             }
-            timeLineDuration = msDuration;
-            timelineDurationInput.setPromptText("" + timeLineDuration);
+            timer.setTimerDurationMs(msDuration);
+            timelineDurationInput.setPromptText("" + msDuration);
             if (!timelinePlaying) {
                 timer.start();
                 timelinePlaying = true;

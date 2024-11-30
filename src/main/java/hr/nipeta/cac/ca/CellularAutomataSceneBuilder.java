@@ -1,9 +1,9 @@
 package hr.nipeta.cac.ca;
 
 import hr.nipeta.cac.Main;
+import hr.nipeta.cac.PeriodicAnimationTimer;
 import hr.nipeta.cac.SceneBuilder;
 import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
-import javafx.animation.AnimationTimer;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -31,11 +31,10 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
     private static final double RECT_BORDER_WIDTH = 0;
     private static final double RECT_TOTAL_SIZE = RECT_SIZE + RECT_BORDER_WIDTH;
 
-    private double timeLineDuration;
     private TextField timelineDurationInput;
     private boolean timelinePlaying;
 
-    private AnimationTimer timer;
+    private PeriodicAnimationTimer timer;
 
     private int rule;
     private TextField ruleInput;
@@ -54,32 +53,11 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
         caLogic = new CellularAutomataLogic(GRID_SIZE_X, GRID_SIZE_Y);
         caLogic.init(rule);
 
-        timeLineDuration = 20;
+        timer = PeriodicAnimationTimer.every(20).execute(this::evolveAndDraw);
 
         timelineDurationInput = new TextField();
         timelineDurationInput.setPrefWidth(150);
-        timelineDurationInput.setPromptText("" + timeLineDuration);
-
-        timer = new AnimationTimer() {
-            long lastUpdate = 0;
-
-            @Override
-            public void handle(long now) {
-                if (lastUpdate == 0) {
-                    lastUpdate = now;
-                    return;
-                }
-
-                double delta = (now - lastUpdate) / 1e6; // milliseconds since last frame
-
-                if (delta > timeLineDuration) {
-                    log.debug("Timer duration is {}ms", timeLineDuration);
-                    lastUpdate = now;
-                    evolveAndDraw();
-                }
-
-            }
-        };
+        timelineDurationInput.setPromptText("" + timer.getTimerDurationMs());
 
         ruleInput = new TextField();
         ruleInput.setPrefWidth(75);
@@ -153,8 +131,8 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
                 timer.stop();
                 timelinePlaying = false;
             }
-            timeLineDuration = msDuration;
-            timelineDurationInput.setPromptText("" + timeLineDuration);
+            timer.setTimerDurationMs(msDuration);
+            timelineDurationInput.setPromptText("" + msDuration);
             if (!timelinePlaying) {
                 timer.start();
                 timelinePlaying = true;

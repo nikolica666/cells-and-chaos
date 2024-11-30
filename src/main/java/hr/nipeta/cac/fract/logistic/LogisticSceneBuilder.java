@@ -1,10 +1,9 @@
 package hr.nipeta.cac.fract.logistic;
 
 import hr.nipeta.cac.Main;
+import hr.nipeta.cac.PeriodicAnimationTimer;
 import hr.nipeta.cac.SceneBuilder;
-import hr.nipeta.cac.ca.CellularAutomataLogic;
 import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
-import javafx.animation.AnimationTimer;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -18,11 +17,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.crypto.NoSuchPaddingException;
 import java.util.List;
-import java.util.Random;
-import java.util.stream.DoubleStream;
-import java.util.stream.IntStream;
 
 @Slf4j
 public class LogisticSceneBuilder extends SceneBuilder {
@@ -36,11 +31,10 @@ public class LogisticSceneBuilder extends SceneBuilder {
     private static final double RECT_BORDER_WIDTH = 0;
     private static final double RECT_TOTAL_SIZE = RECT_SIZE + RECT_BORDER_WIDTH;
 
-    private double timeLineDuration;
     private TextField timelineDurationInput;
     private boolean timelinePlaying;
 
-    private AnimationTimer timer;
+    private PeriodicAnimationTimer timer;
 
     private int rule;
     private TextField ruleInput;
@@ -54,32 +48,11 @@ public class LogisticSceneBuilder extends SceneBuilder {
     @Override
     public Scene createContent() {
 
-        timeLineDuration = 3;
+        timer = PeriodicAnimationTimer.every(3).execute(this::evolveAndDraw);
 
         timelineDurationInput = new TextField();
         timelineDurationInput.setPrefWidth(150);
-        timelineDurationInput.setPromptText("" + timeLineDuration);
-
-        timer = new AnimationTimer() {
-            long lastUpdate = 0;
-
-            @Override
-            public void handle(long now) {
-                if (lastUpdate == 0) {
-                    lastUpdate = now;
-                    return;
-                }
-
-                double delta = (now - lastUpdate) / 1e6; // milliseconds since last frame
-
-                if (delta > timeLineDuration) {
-                    log.debug("Timer duration is {}ms", timeLineDuration);
-                    lastUpdate = now;
-                    evolveAndDraw();
-                }
-
-            }
-        };
+        timelineDurationInput.setPromptText("" + timer.getTimerDurationMs());
 
         ruleInput = new TextField();
         ruleInput.setPrefWidth(75);
@@ -153,8 +126,8 @@ public class LogisticSceneBuilder extends SceneBuilder {
                 timer.stop();
                 timelinePlaying = false;
             }
-            timeLineDuration = msDuration;
-            timelineDurationInput.setPromptText("" + timeLineDuration);
+            timer.setTimerDurationMs(msDuration);
+            timelineDurationInput.setPromptText("" + msDuration);
             if (!timelinePlaying) {
                 timer.start();
                 timelinePlaying = true;

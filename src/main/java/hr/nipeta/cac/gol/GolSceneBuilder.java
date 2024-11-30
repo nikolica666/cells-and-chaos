@@ -1,8 +1,7 @@
 package hr.nipeta.cac.gol;
 
-import static java.lang.System.currentTimeMillis;
-
 import hr.nipeta.cac.Main;
+import hr.nipeta.cac.PeriodicAnimationTimer;
 import hr.nipeta.cac.SceneBuilder;
 import hr.nipeta.cac.gol.count.NeighbourCountBox;
 import hr.nipeta.cac.gol.count.NeighbourCountOpen;
@@ -11,8 +10,6 @@ import hr.nipeta.cac.gol.model.GolCellState;
 import hr.nipeta.cac.gol.rules.*;
 import hr.nipeta.cac.model.IntCoordinates;
 import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -23,11 +20,15 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.*;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.util.Duration;
 import lombok.extern.slf4j.Slf4j;
+
+import static java.lang.System.currentTimeMillis;
 
 @Slf4j
 public class GolSceneBuilder extends SceneBuilder {
@@ -44,8 +45,8 @@ public class GolSceneBuilder extends SceneBuilder {
     private int lastToggledScreenRow;
     private int lastToggledScreenCol;
 
+    private PeriodicAnimationTimer timer;
     private TextField timelineDurationInput;
-    private Timeline timeline;
     private boolean timelinePlaying;
 
     private Canvas canvas;
@@ -60,14 +61,11 @@ public class GolSceneBuilder extends SceneBuilder {
 
         golLogic = new GolLogic(GRID_SIZE_X, GRID_SIZE_Y, new GolConwayRules(), new NeighbourCountWrap());
 
-        double initialTimerDuration = 125;
-
-        timeline = new Timeline(new KeyFrame(Duration.millis(initialTimerDuration), e -> onTimelineFrame()));
-        timeline.setCycleCount(Timeline.INDEFINITE); // Repeat indefinitely
+        timer = PeriodicAnimationTimer.every(125).execute(this::onTimelineFrame);
 
         timelineDurationInput = new TextField();
         timelineDurationInput.setPrefWidth(150);
-        timelineDurationInput.setPromptText("" + initialTimerDuration);
+        timelineDurationInput.setPromptText("" + timer.getTimerDurationMs());
 
         Region parent = new VBox(10, mainMenu(), zoomableCanvas(GRID_SIZE_X * RECT_TOTAL_SIZE, GRID_SIZE_Y * RECT_TOTAL_SIZE));
         parent.setPadding(new Insets(10));
@@ -109,7 +107,7 @@ public class GolSceneBuilder extends SceneBuilder {
         return createButton("Start", event -> {
             if (!timelinePlaying) {
                 evolveAndDrawGrid();
-                timeline.play();
+                timer.start();
                 timelinePlaying = true;
             }
         });
@@ -118,7 +116,7 @@ public class GolSceneBuilder extends SceneBuilder {
     private Button stopButton() {
         return createButton("Stop", event -> {
             if (timelinePlaying) {
-                timeline.stop();
+                timer.stop();
                 timelinePlaying = false;
             }
         });
@@ -132,7 +130,7 @@ public class GolSceneBuilder extends SceneBuilder {
         return createButton("Clear", event -> {
 
             if (timelinePlaying) {
-                timeline.stop();
+                timer.stop();
                 timelinePlaying = false;
             }
 
@@ -169,12 +167,14 @@ public class GolSceneBuilder extends SceneBuilder {
         }
         if (msDuration != null) {
             if (timelinePlaying) {
-                timeline.stop();
+                timer.stop();
+                timelinePlaying = false;
             }
+            timer.setTimerDurationMs(msDuration);
             timelineDurationInput.setPromptText("" + msDuration);
-            timeline.getKeyFrames().setAll(new KeyFrame(Duration.millis(msDuration), e -> onTimelineFrame()));
-            if (timelinePlaying) {
-                timeline.play();
+            if (!timelinePlaying) {
+                timer.start();
+                timelinePlaying = true;
             }
         }
     }
