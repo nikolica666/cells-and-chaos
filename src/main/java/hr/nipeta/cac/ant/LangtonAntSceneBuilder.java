@@ -42,8 +42,6 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
     private String antRules;
     private TextField antRulesInput;
 
-    private TextField timerDurationInput;
-
     private PeriodicAnimationTimerGuiControl timerControl;
 
     private long counter;

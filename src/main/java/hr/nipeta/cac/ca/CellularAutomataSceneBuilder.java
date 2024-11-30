@@ -20,8 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Random;
 
-import static hr.nipeta.cac.model.gui.SceneUtils.createButton;
-import static hr.nipeta.cac.model.gui.SceneUtils.showAlertError;
+import static hr.nipeta.cac.model.gui.SceneUtils.*;
 
 @Slf4j
 public class CellularAutomataSceneBuilder extends SceneBuilder {
@@ -56,9 +55,7 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
 
         timerControl = new PeriodicAnimationTimerGuiControl(PeriodicAnimationTimer.every(20).execute(this::evolveAndDraw));
 
-        ruleInput = new TextField();
-        ruleInput.setPrefWidth(75);
-        ruleInput.setPromptText("" + rule);
+        ruleInput = createInput("" + rule, 75, createTooltip("Enter rule number"), this::onRuleInputSubmit);
 
         Region parent = new VBox(10, mainMenu(), caGridWrapped());
         parent.setPadding(new Insets(10));
@@ -72,8 +69,7 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
                 timerControl.getStopButton(),
                 stepButton(),
                 timerControl.getDurationInput(),
-                ruleInput(),
-                ruleButton(),
+                ruleInput,
                 welcomeScreenButton()
         );
     }
@@ -82,33 +78,10 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
         return createButton("Step", event -> evolveAndDraw());
     }
 
-    private Integer parseTimelineDurationInput(String input) {
-        try {
-            int intInput = Integer.parseInt(input);
-            if (intInput < 20 || intInput > 30_000) {
-                showAlertError("Frequency must be between 20ms and 30000ms.");
-                return null;
-            } else {
-                return intInput;
-            }
-        } catch (NumberFormatException ex) {
-            showAlertError("Invalid number. Please enter a valid number.");
-            return null;
-        }
-    }
-
     private Button welcomeScreenButton() {
         return createButton(
                 "Main menu",
                 e -> createScene(() -> new WelcomeSceneBuilder(main)));
-    }
-
-    private Node ruleInput() {
-        return onTextInputEnter(ruleInput, this::onRuleInputSubmit);
-    }
-
-    private Node ruleButton() {
-        return createButton("Set rule number", event -> onRuleInputSubmit());
     }
 
     private void onRuleInputSubmit() {

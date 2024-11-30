@@ -46,6 +46,9 @@ public class SceneUtils {
         if (prompt != null) {
             input.setPromptText(prompt.toString());
         }
+        if (tooltip != null) {
+            input.setTooltip(tooltip);
+        }
         return input;
     }
 
