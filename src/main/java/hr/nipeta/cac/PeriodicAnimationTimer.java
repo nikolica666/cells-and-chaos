@@ -14,6 +14,12 @@ public class PeriodicAnimationTimer extends AnimationTimer {
     @Setter
     private long timerDurationMs;
 
+    /**
+     * Useful flag so we know if this timer is currently active
+     */
+    @Getter
+    private boolean playing;
+
     final private Runnable onTick;
 
     private PeriodicAnimationTimer(long timerDurationMs, Runnable onTick) {
@@ -50,10 +56,18 @@ public class PeriodicAnimationTimer extends AnimationTimer {
 
     }
 
-    @Getter
-    private boolean playing;
-
+    /**
+     * <ol>
+     *     <li>If this is {@link #playing} at the beginning of this method, {@link #stop() stop it}</li>
+     *     <li>Execute the input parameter {@code runnable}</li>
+     *     <li>If this was {@link #playing} at the <b>beginning</b> of this method, {@link #start() start it}</li>
+     * </ol>
+     *
+     * @param runnable void method with no arguments we'd like to execute
+     */
     public void stopToExecuteThenRestart(Runnable runnable) {
+
+        final boolean wasPlaying = this.isPlaying();
 
         if (this.isPlaying()) {
             this.stop();
@@ -61,18 +75,28 @@ public class PeriodicAnimationTimer extends AnimationTimer {
 
         runnable.run();
 
-        if (!this.isPlaying()) {
+        if (!this.isPlaying() && wasPlaying) {
             this.start();
         }
 
     }
 
+    /**
+     * <p>Calls {@link AnimationTimer#start()} and sets {@link #playing} to <b>true</b> (below is inherited JavaDoc)</p>
+     *
+     * {@inheritDoc}
+     */
     @Override
     public void start() {
         super.start();
         this.playing = true;
     }
 
+    /**
+     * <p>Calls {@link AnimationTimer#stop()} and sets {@link #playing} to <b>false</b> (below is inherited JavaDoc)</p>
+     *
+     * {@inheritDoc}
+     */
     @Override
     public void stop() {
         super.stop();

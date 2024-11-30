@@ -2,7 +2,6 @@ package hr.nipeta.cac.fract.mandlebrot;
 
 import hr.nipeta.cac.Main;
 import hr.nipeta.cac.SceneBuilder;
-import hr.nipeta.cac.fract.julia.JuliaLogic;
 import hr.nipeta.cac.fract.model.FractalResult;
 import hr.nipeta.cac.model.ComplexNumber;
 import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
@@ -19,12 +18,9 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -54,7 +50,7 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
 
         tooltipCanvas = new Canvas(canvasPixelsX, canvasPixelsY);
         GraphicsContext tooltipGc = tooltipCanvas.getGraphicsContext2D();
-        tooltipGc.setFont(new Font(16));
+        tooltipGc.setFont(Main.regularFont);
 
         tooltipCanvas.addEventHandler(MouseEvent.MOUSE_MOVED, e -> handleMouseMoved(e, tooltipGc));
         // Tooltip layer is on top, on its event, will pass in Fractal's canvas graphic context
@@ -165,7 +161,6 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
 
         gc.setFill(Color.WHEAT);
         gc.clearRect(0, 0, canvasPixelsX, canvasPixelsY);
-        gc.setFont(Main.regularFont);
         gc.fillText(
                 String.format("pixel (%s,%s)\r\nto center (%s,%s)\r\n%f+%fi",
                         e.getX(),

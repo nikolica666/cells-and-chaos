@@ -8,10 +8,12 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextInputControl;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.util.function.Supplier;
 
@@ -43,6 +45,17 @@ public abstract class SceneBuilder {
         return button;
     }
 
+    /**
+     * Creates simple tooltip for given text
+     * <p>ShowDelay and HideDelay are both set to 0</p>
+     */
+    protected Tooltip createTooltip(String text) {
+        Tooltip tooltip = new Tooltip(text);
+        tooltip.setShowDelay(Duration.millis(0));
+        tooltip.setHideDelay(Duration.millis(0));
+        return tooltip;
+    }
+    
     protected void showAlertError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");

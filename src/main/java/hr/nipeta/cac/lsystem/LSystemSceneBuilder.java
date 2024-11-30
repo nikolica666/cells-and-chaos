@@ -10,11 +10,9 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.util.Duration;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -61,30 +59,16 @@ public class LSystemSceneBuilder extends SceneBuilder {
     }
 
     private void initRuleInput() {
-
         ruleInput = new TextField();
         ruleInput.setPrefWidth(200);
-
-        Tooltip ruleTooltip = new Tooltip("Rules should be in format variable1:rule1, variable2:rule2 ");
-        ruleTooltip.setShowDelay(Duration.millis(0));
-        ruleTooltip.setHideDelay(Duration.millis(0));
-
-        ruleInput.setTooltip(ruleTooltip);
-
+        ruleInput.setTooltip(createTooltip("Rules should be in format variable1:rule1, variable2:rule2 "));
     }
 
     private void initAxiomInput() {
-
         axiomInput = new TextField();
         axiomInput.setPrefWidth(200);
         axiomInput.setPromptText(axiom);
-
-        Tooltip axiomTooltip = new Tooltip("Axiom is starting point for evolving");
-        axiomTooltip.setShowDelay(Duration.millis(0));
-        axiomTooltip.setHideDelay(Duration.millis(0));
-
-        axiomInput.setTooltip(axiomTooltip);
-
+        axiomInput.setTooltip(createTooltip("Axiom is starting point for evolving"));
     }
 
     private Node mainMenu() {

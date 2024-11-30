@@ -9,16 +9,14 @@ import hr.nipeta.cac.gol.count.NeighbourCountWrap;
 import hr.nipeta.cac.gol.model.GolCellState;
 import hr.nipeta.cac.gol.rules.*;
 import hr.nipeta.cac.model.IntCoordinates;
+import hr.nipeta.cac.model.RectangularGrid;
 import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
@@ -33,23 +31,20 @@ import static java.lang.System.currentTimeMillis;
 @Slf4j
 public class GolSceneBuilder extends SceneBuilder {
 
-    private static final int GRID_SIZE_X = 200;
-    private static final int GRID_SIZE_Y = 100;
+    private RectangularGrid rectangularGrid;
 
-    private static GolLogic golLogic;
-
-    private static final double RECT_SIZE = 10;
-    private static final double RECT_BORDER_WIDTH = 1;
-    private static final double RECT_TOTAL_SIZE = RECT_SIZE + RECT_BORDER_WIDTH;
+    private GolLogic golLogic;
 
     private int lastToggledScreenRow;
     private int lastToggledScreenCol;
 
     private PeriodicAnimationTimer timer;
-    private TextField timelineDurationInput;
+    private TextField timerDurationInput;
 
     private Canvas canvas;
     private double scaleFactor = 1.0;
+
+    private TextField cellSizeInput;
 
     public GolSceneBuilder(Main main) {
         super(main);
@@ -58,22 +53,28 @@ public class GolSceneBuilder extends SceneBuilder {
     @Override
     public Scene createContent() {
 
-        golLogic = new GolLogic(GRID_SIZE_X, GRID_SIZE_Y, new GolConwayRules(), new NeighbourCountWrap());
+        rectangularGrid = RectangularGrid.of(100,200,10,1);
 
-        timer = PeriodicAnimationTimer.every(125).execute(this::onTimelineFrame);
+        golLogic = new GolLogic(rectangularGrid.getCols(), rectangularGrid.getRows(), new GolConwayRules(), new NeighbourCountWrap());
 
-        timelineDurationInput = new TextField();
-        timelineDurationInput.setPrefWidth(150);
-        timelineDurationInput.setPromptText("" + timer.getTimerDurationMs());
+        timer = PeriodicAnimationTimer.every(125).execute(this::evolveAndDrawGrid);
 
-        Region parent = new VBox(10, mainMenu(), zoomableCanvas(GRID_SIZE_X * RECT_TOTAL_SIZE, GRID_SIZE_Y * RECT_TOTAL_SIZE));
+        timerDurationInput = new TextField();
+        timerDurationInput.setPrefWidth(150);
+        timerDurationInput.setPromptText("" + timer.getTimerDurationMs());
+
+        cellSizeInput = new TextField();
+        cellSizeInput.setPrefWidth(150);
+        cellSizeInput.setPromptText("" + rectangularGrid.getCellSize());
+
+        Region parent = new VBox(10,
+                mainMenu(),
+                zoomableCanvas(
+                        rectangularGrid.getCols() * rectangularGrid.getCellSizeWithBorder(),
+                        rectangularGrid.getRows() * rectangularGrid.getCellSizeWithBorder()));
         parent.setPadding(new Insets(10));
         return new Scene(parent);
 
-    }
-
-    private void onTimelineFrame() {
-        evolveAndDrawGrid();
     }
 
     private void evolveAndDrawGrid() {
@@ -98,8 +99,62 @@ public class GolSceneBuilder extends SceneBuilder {
                 timelineDurationButton(),
                 rulesSelector(),
                 neighbourCountSelector(),
+                cellSizeInput(),
                 welcomeScreenButton()
         );
+    }
+
+    private Node cellSizeInput() {
+        TextInputControl textInputControl = onTextInputEnter(cellSizeInput, this::onCellSizeInputSubmit);
+        textInputControl.setTooltip(createTooltip("Cell size"));
+        return textInputControl;
+    }
+
+    private void onCellSizeInputSubmit() {
+
+        Double newCellSize = parseCellSizeInput(cellSizeInput.getText());
+
+        if (newCellSize == null) {
+            return;
+        }
+
+        if (newCellSize.compareTo(rectangularGrid.getCellSize()) == 0) {
+            return;
+        }
+
+        timer.stopToExecuteThenRestart(() -> {
+            rectangularGrid.setCellSize(newCellSize);
+            cellSizeInput.setPromptText("" + newCellSize);
+            resizeAndRedrawCanvas();
+        });
+
+    }
+
+    private void resizeAndRedrawCanvas() {
+
+        canvas.setWidth(rectangularGrid.getCols() * rectangularGrid.getCellSizeWithBorder());
+        canvas.setHeight(rectangularGrid.getRows() * rectangularGrid.getCellSizeWithBorder());
+        canvas.getGraphicsContext2D().clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+
+        drawEmptyGrid(canvas.getGraphicsContext2D());
+
+        drawGrid(canvas.getGraphicsContext2D());
+
+    }
+
+    private Double parseCellSizeInput(String input) {
+        try {
+            double doubleInput = Double.parseDouble(input);
+            if (doubleInput < 1 || doubleInput > 127) {
+                showAlertError("Cell size must be between 1 and 127.");
+                return null;
+            } else {
+                return doubleInput;
+            }
+        } catch (NumberFormatException ex) {
+            showAlertError("Invalid number. Please enter a valid number.");
+            return null;
+        }
     }
 
     private Button startButton() {
@@ -139,7 +194,7 @@ public class GolSceneBuilder extends SceneBuilder {
     }
 
     private Node timelineDurationInput() {
-        return onTextInputEnter(timelineDurationInput, this::onTimelineDurationInputSubmit);
+        return onTextInputEnter(timerDurationInput, this::onTimelineDurationInputSubmit);
     }
 
     private Button timelineDurationButton() {
@@ -148,12 +203,12 @@ public class GolSceneBuilder extends SceneBuilder {
 
     private void onTimelineDurationInputSubmit() {
 
-        Integer msDuration = parseTimelineDurationInput(timelineDurationInput.getText());
+        Integer msDuration = parseTimelineDurationInput(timerDurationInput.getText());
 
         if (msDuration != null) {
             timer.stopToExecuteThenRestart(() -> {
                 timer.setTimerDurationMs(msDuration);
-                timelineDurationInput.setPromptText("" + msDuration);
+                timerDurationInput.setPromptText("" + msDuration);
             });
         }
 
@@ -192,12 +247,7 @@ public class GolSceneBuilder extends SceneBuilder {
         rulesSelector.setPrefWidth(250);
         rulesSelector.getEditor().setContextMenu(null); // Preventing popup when typing in editor field
         rulesSelector.setEditable(true);
-
-        Tooltip tooltip = new Tooltip("Born/Survive rules (classical rule is 'Conway' B3/S23 - born when 3 live neighbours, survive if 2 or 3 live neighbours)");
-        tooltip.setShowDelay(Duration.millis(0));
-        tooltip.setHideDelay(Duration.millis(0));
-
-        rulesSelector.setTooltip(tooltip);
+        rulesSelector.setTooltip(createTooltip("Born/Survive rules (classical rule is 'Conway' B3/S23 - born when 3 live neighbours, survive if 2 or 3 live neighbours)"));
         rulesSelector.setOnAction(e -> {
             String selectedRule = rulesSelector.getValue();
 
@@ -239,12 +289,7 @@ public class GolSceneBuilder extends SceneBuilder {
         neighbourCountSelector.getItems().addAll("Box", "Open", "Wrap");
         neighbourCountSelector.setValue("Wrap"); // Default selection
         neighbourCountSelector.setPrefWidth(150);
-
-        Tooltip tooltip = new Tooltip("Border type");
-        tooltip.setShowDelay(Duration.millis(0));
-        tooltip.setHideDelay(Duration.millis(0));
-
-        neighbourCountSelector.setTooltip(tooltip);
+        neighbourCountSelector.setTooltip(createTooltip("Border type"));
         neighbourCountSelector.setOnAction(e -> {
             String selectedRule = neighbourCountSelector.getValue();
             switch (selectedRule) {
@@ -309,10 +354,10 @@ public class GolSceneBuilder extends SceneBuilder {
 
     private void handleMousePressed(MouseEvent e, GraphicsContext gc) {
 
-        int col = (int)(e.getX() / RECT_TOTAL_SIZE);
-        int row = (int)(e.getY() / RECT_TOTAL_SIZE);
+        int col = (int)(e.getX() / rectangularGrid.getCellSizeWithBorder());
+        int row = (int)(e.getY() / rectangularGrid.getCellSizeWithBorder());
 
-        if (col >= 0 && col < GRID_SIZE_X && row >= 0 && row < GRID_SIZE_Y) {
+        if (col >= 0 && col < rectangularGrid.getCols() && row >= 0 && row < rectangularGrid.getRows()) {
             toggleCell(row, col, gc);
         }
 
@@ -320,10 +365,10 @@ public class GolSceneBuilder extends SceneBuilder {
 
     private void handleMouseDragged(MouseEvent e, GraphicsContext gc) {
 
-        int col = (int)(e.getX() / RECT_TOTAL_SIZE);
-        int row = (int)(e.getY() / RECT_TOTAL_SIZE);
+        int col = (int)(e.getX() / rectangularGrid.getCellSizeWithBorder());
+        int row = (int)(e.getY() / rectangularGrid.getCellSizeWithBorder());
 
-        if (col >= 0 && col < GRID_SIZE_X && row >= 0 && row < GRID_SIZE_Y) {
+        if (col >= 0 && col < rectangularGrid.getCols() && row >= 0 && row < rectangularGrid.getRows()) {
             if (lastToggledScreenRow != row || lastToggledScreenCol != col) {
                 toggleCell(row, col, gc);
             }
@@ -347,8 +392,8 @@ public class GolSceneBuilder extends SceneBuilder {
 
         // No need to clear canvas (not sure)
 
-        for (int row = 0; row < GRID_SIZE_Y; row++) {
-            for (int col = 0; col < GRID_SIZE_X; col++) {
+        for (int row = 0; row < rectangularGrid.getRows(); row++) {
+            for (int col = 0; col < rectangularGrid.getCols(); col++) {
                 drawEmptyCell(gc, row, col);
             }
         }
@@ -373,7 +418,7 @@ public class GolSceneBuilder extends SceneBuilder {
             drawCell(gc, cell, setFillBasedOnCellState(GolCellState.DEAD));
         }
 
-        log.debug("I drew {} of {} cells in {}ms", counter, GRID_SIZE_Y * GRID_SIZE_X, (currentTimeMillis() - milli));
+        log.debug("I drew {} of {} cells in {}ms", counter, rectangularGrid.getNumberOfCells(), (currentTimeMillis() - milli));
 
     }
 
@@ -385,21 +430,21 @@ public class GolSceneBuilder extends SceneBuilder {
 
         log.trace("Drawing cell row={}, col={} {}", row, col, paint);
 
-        double x = col * RECT_TOTAL_SIZE;
-        double y = row * RECT_TOTAL_SIZE;
+        double x = col * rectangularGrid.getCellSizeWithBorder();
+        double y = row * rectangularGrid.getCellSizeWithBorder();
 
         gc.setFill(paint);
-        gc.fillRect(x, y, RECT_SIZE, RECT_SIZE);
+        gc.fillRect(x, y, rectangularGrid.getCellSize(), rectangularGrid.getCellSize());
 
     }
 
     private void drawEmptyCell(GraphicsContext gc, int row, int col) {
 
-        double x = col * RECT_TOTAL_SIZE;
-        double y = row * RECT_TOTAL_SIZE;
+        double x = col * rectangularGrid.getCellSizeWithBorder();
+        double y = row * rectangularGrid.getCellSizeWithBorder();
 
         gc.setFill(setFillBasedOnCellState(GolCellState.DEAD));
-        gc.fillRect(x, y, RECT_SIZE, RECT_SIZE);
+        gc.fillRect(x, y, rectangularGrid.getCellSize(), rectangularGrid.getCellSize());
 
     }
 
