@@ -24,8 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Arrays;
 import java.util.List;
 
-import static hr.nipeta.cac.model.gui.SceneUtils.createButton;
-import static hr.nipeta.cac.model.gui.SceneUtils.showAlertError;
+import static hr.nipeta.cac.model.gui.SceneUtils.*;
 
 @Slf4j
 public class LangtonAntSceneBuilder extends SceneBuilder {
@@ -58,6 +57,7 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
 
         // Classical rules are default (2 types of tiles, turn left / turn right)
         antRules = "RL";
+        antRulesInput = createInput(antRules, 250, createTooltip("R=Right, L=Left, C=Continue, U=Turn around"), this::onAntRulesInputSubmit);
 
         antLogic = new LangtonAntLogic(GRID_SIZE_X, GRID_SIZE_Y);
         antLogic.init(antRules);
@@ -76,7 +76,7 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
                 timerControl.getStopButton(),
                 stepButton(),
                 timerControl.getDurationInput(),
-                antRulesInput(),
+                antRulesInput,
                 counterLabel(),
                 welcomeScreenButton()
         );
@@ -84,13 +84,6 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
 
     private Button stepButton() {
         return createButton("Step", event -> evolveAndDraw());
-    }
-
-    private Node antRulesInput() {
-        antRulesInput = new TextField();
-        antRulesInput.setPrefWidth(250);
-        antRulesInput.setPromptText(antRules);
-        return onTextInputEnter(antRulesInput, this::onAntRulesInputSubmit);
     }
 
     private void onAntRulesInputSubmit() {

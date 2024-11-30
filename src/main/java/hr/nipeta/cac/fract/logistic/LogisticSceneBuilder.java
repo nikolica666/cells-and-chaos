@@ -3,6 +3,7 @@ package hr.nipeta.cac.fract.logistic;
 import hr.nipeta.cac.Main;
 import hr.nipeta.cac.SceneBuilder;
 import hr.nipeta.cac.model.gui.PeriodicAnimationTimer;
+import hr.nipeta.cac.model.gui.PeriodicAnimationTimerGuiControl;
 import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -33,9 +34,7 @@ public class LogisticSceneBuilder extends SceneBuilder {
     private static final double RECT_BORDER_WIDTH = 0;
     private static final double RECT_TOTAL_SIZE = RECT_SIZE + RECT_BORDER_WIDTH;
 
-    private TextField timelineDurationInput;
-
-    private PeriodicAnimationTimer timer;
+    private PeriodicAnimationTimerGuiControl timerControl;
 
     private GraphicsContext gc;
 
@@ -46,11 +45,8 @@ public class LogisticSceneBuilder extends SceneBuilder {
     @Override
     public Scene createContent() {
 
-        timer = PeriodicAnimationTimer.every(3).execute(this::evolveAndDraw);
-
-        timelineDurationInput = new TextField();
-        timelineDurationInput.setPrefWidth(150);
-        timelineDurationInput.setPromptText("" + timer.getDurationMs());
+        timerControl = new PeriodicAnimationTimerGuiControl(
+                PeriodicAnimationTimer.every(3).execute(this::evolveAndDraw));
 
         Region parent = new VBox(10, mainMenu(), caGridWrapped());
         parent.setPadding(new Insets(10));
@@ -60,75 +56,12 @@ public class LogisticSceneBuilder extends SceneBuilder {
 
     private Node mainMenu() {
         return horizontalMenu(
-                startButton(),
-                stopButton(),
-                stepButton(),
-                timelineDurationInput(),
-                timelineDurationButton(),
-                welcomeScreenButton()
+                timerControl.getStartButton(),
+                timerControl.getStopButton(),
+                createButton("Step", event -> evolveAndDraw()),
+                timerControl.getDurationInput(),
+                createButton("Main menu", e -> createScene(() -> new WelcomeSceneBuilder(main)))
         );
-    }
-
-    private Button startButton() {
-        return createButton("Start", event -> {
-            if (!timer.isPlaying()) {
-                evolveAndDraw();
-                timer.start();
-            }
-        });
-    }
-
-    private Button stopButton() {
-        return createButton("Stop", event -> stopTimeline());
-    }
-
-    private void stopTimeline() {
-        if (timer.isPlaying()) {
-            timer.stop();
-        }
-    }
-
-    private Button stepButton() {
-        return createButton("Step", event -> evolveAndDraw());
-    }
-
-    private Node timelineDurationInput() {
-        return onTextInputEnter(timelineDurationInput, this::onTimelineDurationInputSubmit);
-    }
-
-    private Button timelineDurationButton() {
-        return createButton("Set ms", event -> onTimelineDurationInputSubmit());
-    }
-
-    private void onTimelineDurationInputSubmit() {
-        String input = timelineDurationInput.getText();
-        Integer msDuration = null;
-        try {
-            int intInput = Integer.parseInt(input);
-            if (intInput < 4 || intInput > 30_000) {
-                showAlertError("Frequency must be between 4ms and 30000ms.");
-            } else {
-                msDuration = intInput;
-            }
-        } catch (NumberFormatException ex) {
-            showAlertError("Invalid number. Please enter a valid number.");
-        }
-        if (msDuration != null) {
-            if (timer.isPlaying()) {
-                timer.stop();
-            }
-            timer.setDurationMs(msDuration);
-            timelineDurationInput.setPromptText("" + msDuration);
-            if (!timer.isPlaying()) {
-                timer.start();
-            }
-        }
-    }
-
-    private Button welcomeScreenButton() {
-        return createButton(
-                "Main menu",
-                e -> createScene(() -> new WelcomeSceneBuilder(main)));
     }
 
     private Node caGridWrapped() {
@@ -145,17 +78,6 @@ public class LogisticSceneBuilder extends SceneBuilder {
         gc.fillRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
 
         return new Pane(canvas);
-
-    }
-
-    private void drawCell(GraphicsContext gc, int col, int row) {
-
-        double x = col * RECT_TOTAL_SIZE;
-        double y = row * RECT_TOTAL_SIZE;
-
-        // Draw cell background
-        gc.setFill(Color.DARKGREEN);
-        gc.fillRect(x, y, RECT_SIZE, RECT_SIZE);
 
     }
 
@@ -186,7 +108,9 @@ public class LogisticSceneBuilder extends SceneBuilder {
         currentXAxis += stepXAxis;
 
         if (currentXAxis >= maxXAxis) {
-            stopTimeline();
+            if (timerControl.getTimer().isPlaying()) {
+                timerControl.getTimer().stop();
+            }
         }
 
     }

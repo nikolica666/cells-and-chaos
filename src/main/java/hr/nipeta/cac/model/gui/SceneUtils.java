@@ -11,6 +11,10 @@ import javafx.util.Duration;
 
 public class SceneUtils {
 
+    /**
+     * @param text Button text
+     * @param actionEventHandler Action after button is clicked
+     */
     public static Button createButton(String text, EventHandler<ActionEvent> actionEventHandler) {
         Button button = new Button(text);
         button.setOnAction(actionEventHandler);
@@ -20,6 +24,8 @@ public class SceneUtils {
     /**
      * Creates simple tooltip for given text
      * <p>ShowDelay and HideDelay are both set to 0</p>
+     *
+     * @param text Tooltip text
      */
     public static Tooltip createTooltip(String text) {
         Tooltip tooltip = new Tooltip(text);
