@@ -27,7 +27,10 @@ public abstract class SceneBuilder {
 
     public Scene build() {
         Scene scene = createContent();
-        scene.getStylesheets().add(getClass().getResource("/css/main.css").toExternalForm());
+        scene.getStylesheets().addAll(
+                getClass().getResource("/css/font-lemonmilk.css").toExternalForm(),
+                getClass().getResource("/css/main.css").toExternalForm()
+        );
         return scene;
     }
 
