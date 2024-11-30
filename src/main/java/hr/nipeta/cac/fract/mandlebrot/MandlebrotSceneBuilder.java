@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static hr.nipeta.cac.model.gui.SceneUtils.createButton;
+
 @Slf4j
 public class MandlebrotSceneBuilder extends SceneBuilder {
 

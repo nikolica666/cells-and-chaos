@@ -1,7 +1,6 @@
-package hr.nipeta.cac;
+package hr.nipeta.cac.model.gui;
 
 import javafx.animation.AnimationTimer;
-import javafx.util.Duration;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,7 +11,7 @@ public class PeriodicAnimationTimer extends AnimationTimer {
 
     @Getter
     @Setter
-    private long timerDurationMs;
+    private long durationMs;
 
     /**
      * Useful flag so we know if this timer is currently active
@@ -22,8 +21,9 @@ public class PeriodicAnimationTimer extends AnimationTimer {
 
     final private Runnable onTick;
 
+    // TODO do we even need method inside timer? maybe it's ok just to start/stop it?
     private PeriodicAnimationTimer(long timerDurationMs, Runnable onTick) {
-        this.timerDurationMs = timerDurationMs;
+        this.durationMs = timerDurationMs;
         this.onTick = onTick;
     }
 
@@ -49,34 +49,9 @@ public class PeriodicAnimationTimer extends AnimationTimer {
 
         double delta = (now - lastUpdate) / 1e6; // milliseconds since last frame
 
-        if (delta > timerDurationMs) {
+        if (delta > durationMs) {
             lastUpdate = now;
             onTick.run();
-        }
-
-    }
-
-    /**
-     * <ol>
-     *     <li>If this is {@link #playing} at the beginning of this method, {@link #stop() stop it}</li>
-     *     <li>Execute the input parameter {@code runnable}</li>
-     *     <li>If this was {@link #playing} at the <b>beginning</b> of this method, {@link #start() start it}</li>
-     * </ol>
-     *
-     * @param runnable void method with no arguments we'd like to execute
-     */
-    public void stopToExecuteThenRestart(Runnable runnable) {
-
-        final boolean wasPlaying = this.isPlaying();
-
-        if (this.isPlaying()) {
-            this.stop();
-        }
-
-        runnable.run();
-
-        if (!this.isPlaying() && wasPlaying) {
-            this.start();
         }
 
     }

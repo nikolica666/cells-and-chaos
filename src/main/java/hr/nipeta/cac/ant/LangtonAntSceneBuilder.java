@@ -1,10 +1,11 @@
 package hr.nipeta.cac.ant;
 
 import hr.nipeta.cac.Main;
-import hr.nipeta.cac.PeriodicAnimationTimer;
 import hr.nipeta.cac.SceneBuilder;
 import hr.nipeta.cac.model.Coordinates;
 import hr.nipeta.cac.model.IntCoordinates;
+import hr.nipeta.cac.model.gui.PeriodicAnimationTimer;
+import hr.nipeta.cac.model.gui.PeriodicAnimationTimerGuiControl;
 import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -23,6 +24,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Arrays;
 import java.util.List;
 
+import static hr.nipeta.cac.model.gui.SceneUtils.createButton;
+import static hr.nipeta.cac.model.gui.SceneUtils.showAlertError;
+
 @Slf4j
 public class LangtonAntSceneBuilder extends SceneBuilder {
 
@@ -40,7 +44,7 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
 
     private TextField timerDurationInput;
 
-    private PeriodicAnimationTimer timer;
+    private PeriodicAnimationTimerGuiControl timerControl;
 
     private long counter;
     private Label counterLabel;
@@ -60,7 +64,7 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
         antLogic = new LangtonAntLogic(GRID_SIZE_X, GRID_SIZE_Y);
         antLogic.init(antRules);
 
-        timer = PeriodicAnimationTimer.every(20).execute(this::evolveAndDraw);
+        timerControl = new PeriodicAnimationTimerGuiControl(PeriodicAnimationTimer.every(20).execute(this::evolveAndDraw));
 
         Region parent = new VBox(10, mainMenu(), antGridWrapped());
         parent.setPadding(new Insets(10));
@@ -70,75 +74,18 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
 
     private Node mainMenu() {
         return horizontalMenu(
-                startButton(),
-                stopButton(),
+                timerControl.getStartButton(),
+                timerControl.getStopButton(),
                 stepButton(),
-                timerDurationInput(),
-                timerDurationButton(),
+                timerControl.getDurationInput(),
                 antRulesInput(),
                 counterLabel(),
                 welcomeScreenButton()
         );
     }
 
-    private Button startButton() {
-        return createButton("Start", event -> {
-            if (!timer.isPlaying()) {
-                evolveAndDraw();
-                timer.start();
-            }
-        });
-    }
-
-    private Button stopButton() {
-        return createButton("Stop", event -> {
-            if (timer.isPlaying()) {
-                timer.stop();
-            }
-        });
-    }
-
     private Button stepButton() {
         return createButton("Step", event -> evolveAndDraw());
-    }
-
-    private Node timerDurationInput() {
-        timerDurationInput = new TextField();
-        timerDurationInput.setPrefWidth(150);
-        timerDurationInput.setPromptText("" + timer.getTimerDurationMs());
-        return onTextInputEnter(timerDurationInput, this::onTimerDurationInputSubmit);
-    }
-
-    private Button timerDurationButton() {
-        return createButton("Set ms", event -> onTimerDurationInputSubmit());
-    }
-
-    private void onTimerDurationInputSubmit() {
-
-        final Integer msDuration = parseTimelineDurationInput(timerDurationInput.getText());
-
-        if (msDuration != null) {
-            timer.stopToExecuteThenRestart(() -> {
-                timer.setTimerDurationMs(msDuration);
-                timerDurationInput.setPromptText("" + msDuration);
-            });
-        }
-
-    }
-
-    private Integer parseTimelineDurationInput(String input) {
-        try {
-            int intInput = Integer.parseInt(input);
-            if (intInput < 20 || intInput > 30_000) {
-                showAlertError("Frequency must be between 20ms and 30000ms.");
-                return null;
-            } else {
-                return intInput;
-            }
-        } catch (NumberFormatException ex) {
-            showAlertError("Invalid number. Please enter a valid number.");
-            return null;
-        }
     }
 
     private Node antRulesInput() {

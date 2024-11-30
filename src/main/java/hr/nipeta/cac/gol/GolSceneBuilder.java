@@ -1,7 +1,6 @@
 package hr.nipeta.cac.gol;
 
 import hr.nipeta.cac.Main;
-import hr.nipeta.cac.PeriodicAnimationTimer;
 import hr.nipeta.cac.SceneBuilder;
 import hr.nipeta.cac.gol.count.NeighbourCountBox;
 import hr.nipeta.cac.gol.count.NeighbourCountOpen;
@@ -10,36 +9,38 @@ import hr.nipeta.cac.gol.model.GolCellState;
 import hr.nipeta.cac.gol.rules.*;
 import hr.nipeta.cac.model.IntCoordinates;
 import hr.nipeta.cac.model.RectangularGrid;
+import hr.nipeta.cac.model.gui.PeriodicAnimationTimer;
+import hr.nipeta.cac.model.gui.PeriodicAnimationTimerGuiControl;
 import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
-import javafx.util.Duration;
 import lombok.extern.slf4j.Slf4j;
 
+import static hr.nipeta.cac.model.gui.SceneUtils.*;
 import static java.lang.System.currentTimeMillis;
 
 @Slf4j
 public class GolSceneBuilder extends SceneBuilder {
 
     private RectangularGrid rectangularGrid;
+    private PeriodicAnimationTimerGuiControl timerControl;
 
-    private GolLogic golLogic;
+    private GolLogic logic;
 
     private int lastToggledScreenRow;
     private int lastToggledScreenCol;
-
-    private PeriodicAnimationTimer timer;
-    private TextField timerDurationInput;
 
     private Canvas canvas;
     private double scaleFactor = 1.0;
@@ -54,18 +55,12 @@ public class GolSceneBuilder extends SceneBuilder {
     public Scene createContent() {
 
         rectangularGrid = RectangularGrid.of(100,200,10,1);
+        logic = new GolLogic(rectangularGrid.getCols(), rectangularGrid.getRows(), new GolConwayRules(), new NeighbourCountWrap());
 
-        golLogic = new GolLogic(rectangularGrid.getCols(), rectangularGrid.getRows(), new GolConwayRules(), new NeighbourCountWrap());
+        timerControl = new PeriodicAnimationTimerGuiControl(
+                PeriodicAnimationTimer.every(125).execute(this::evolveAndDrawGrid));
 
-        timer = PeriodicAnimationTimer.every(125).execute(this::evolveAndDrawGrid);
-
-        timerDurationInput = new TextField();
-        timerDurationInput.setPrefWidth(150);
-        timerDurationInput.setPromptText("" + timer.getTimerDurationMs());
-
-        cellSizeInput = new TextField();
-        cellSizeInput.setPrefWidth(150);
-        cellSizeInput.setPromptText("" + rectangularGrid.getCellSize());
+        cellSizeInput = createInput("" + rectangularGrid.getCellSize(), 150, createTooltip("Cell size"), this::onCellSizeInputSubmit);
 
         Region parent = new VBox(10,
                 mainMenu(),
@@ -85,29 +80,22 @@ public class GolSceneBuilder extends SceneBuilder {
     }
 
     private void evolve() {
-        golLogic.evolve();
+        logic.evolve();
     }
 
     private Node mainMenu() {
         return horizontalMenu(
-                startButton(),
-                stopButton(),
+                timerControl.getStartButton(),
+                timerControl.getStopButton(),
                 stepButton(),
                 randomizeButton(),
                 clearButton(),
-                timelineDurationInput(),
-                timelineDurationButton(),
+                timerControl.getDurationInput(),
                 rulesSelector(),
                 neighbourCountSelector(),
-                cellSizeInput(),
+                cellSizeInput,
                 welcomeScreenButton()
         );
-    }
-
-    private Node cellSizeInput() {
-        TextInputControl textInputControl = onTextInputEnter(cellSizeInput, this::onCellSizeInputSubmit);
-        textInputControl.setTooltip(createTooltip("Cell size"));
-        return textInputControl;
     }
 
     private void onCellSizeInputSubmit() {
@@ -122,7 +110,7 @@ public class GolSceneBuilder extends SceneBuilder {
             return;
         }
 
-        timer.stopToExecuteThenRestart(() -> {
+        timerControl.stopToExecuteThenRestart(() -> {
             rectangularGrid.setCellSize(newCellSize);
             cellSizeInput.setPromptText("" + newCellSize);
             resizeAndRedrawCanvas();
@@ -157,23 +145,6 @@ public class GolSceneBuilder extends SceneBuilder {
         }
     }
 
-    private Button startButton() {
-        return createButton("Start", event -> {
-            if (!timer.isPlaying()) {
-                evolveAndDrawGrid();
-                timer.start();
-            }
-        });
-    }
-
-    private Button stopButton() {
-        return createButton("Stop", event -> {
-            if (timer.isPlaying()) {
-                timer.stop();
-            }
-        });
-    }
-
     private Button stepButton() {
         return createButton("Step", event -> evolveAndDrawGrid());
     }
@@ -181,11 +152,11 @@ public class GolSceneBuilder extends SceneBuilder {
     private Node clearButton() {
         return createButton("Clear", event -> {
 
-            if (timer.isPlaying()) {
-                timer.stop();
+            if (timerControl.getTimer().isPlaying()) {
+                timerControl.getTimer().stop();
             }
 
-            golLogic.setAllDead();
+            logic.setAllDead();
 
             drawEmptyGrid(canvas.getGraphicsContext2D());
 
@@ -193,46 +164,10 @@ public class GolSceneBuilder extends SceneBuilder {
 
     }
 
-    private Node timelineDurationInput() {
-        return onTextInputEnter(timerDurationInput, this::onTimelineDurationInputSubmit);
-    }
-
-    private Button timelineDurationButton() {
-        return createButton("Set ms", event -> onTimelineDurationInputSubmit());
-    }
-
-    private void onTimelineDurationInputSubmit() {
-
-        Integer msDuration = parseTimelineDurationInput(timerDurationInput.getText());
-
-        if (msDuration != null) {
-            timer.stopToExecuteThenRestart(() -> {
-                timer.setTimerDurationMs(msDuration);
-                timerDurationInput.setPromptText("" + msDuration);
-            });
-        }
-
-    }
-
-    private Integer parseTimelineDurationInput(String input) {
-        try {
-            int intInput = Integer.parseInt(input);
-            if (intInput < 5 || intInput > 10_000) {
-                showAlertError("Frequency must be between 5ms and 10000ms.");
-                return null;
-            } else {
-                return intInput;
-            }
-        } catch (NumberFormatException ex) {
-            showAlertError("Invalid number. Please enter a valid number.");
-            return null;
-        }
-    }
-
     private Button randomizeButton() {
         return createButton("Randomize", event -> {
 
-            golLogic.randomize();
+            logic.randomize();
 
             drawGrid(canvas.getGraphicsContext2D());
 
@@ -253,29 +188,29 @@ public class GolSceneBuilder extends SceneBuilder {
 
             switch (selectedRule) {
                 case "Conway":
-                    golLogic.setRules(new GolConwayRules());
+                    logic.setRules(new GolConwayRules());
                     break;
                 case "Anneal":
-                    golLogic.setRules(new GolAnnealRules());
+                    logic.setRules(new GolAnnealRules());
                     break;
                 case "DayAndNight":
-                    golLogic.setRules(new GolDayAndNightRules());
+                    logic.setRules(new GolDayAndNightRules());
                     break;
                 case "Diamoeba":
-                    golLogic.setRules(new GolDiamoebaRules());
+                    logic.setRules(new GolDiamoebaRules());
                     break;
                 case "HighLife":
-                    golLogic.setRules(new GolHighLifeRules());
+                    logic.setRules(new GolHighLifeRules());
                     break;
                 case "Seeds":
-                    golLogic.setRules(new GolSeedsRules());
+                    logic.setRules(new GolSeedsRules());
                     break;
                 default:
                     boolean validInput = GolCustomRules.convertAndValidatePattern(selectedRule);
                     if (!validInput) {
                         showAlertError("Custom pattern must be in regex 'B[0-8]*/S[0-8]*' (e.g. 'B3/S23' or 'B278/S' or 'B024/S045')");
                     }
-                    golLogic.setRules(new GolCustomRules(selectedRule));
+                    logic.setRules(new GolCustomRules(selectedRule));
             }
         });
 
@@ -294,13 +229,13 @@ public class GolSceneBuilder extends SceneBuilder {
             String selectedRule = neighbourCountSelector.getValue();
             switch (selectedRule) {
                 case "Box":
-                    golLogic.setNeighbourCount(new NeighbourCountBox());
+                    logic.setNeighbourCount(new NeighbourCountBox());
                     break;
                 case "Open":
-                    golLogic.setNeighbourCount(new NeighbourCountOpen());
+                    logic.setNeighbourCount(new NeighbourCountOpen());
                     break;
                 case "Wrap":
-                    golLogic.setNeighbourCount(new NeighbourCountWrap());
+                    logic.setNeighbourCount(new NeighbourCountWrap());
                     break;
             }
         });
@@ -382,7 +317,7 @@ public class GolSceneBuilder extends SceneBuilder {
         lastToggledScreenCol = col;
 
         // We set "next enum" when mouse is dragged on screen
-        GolCellState newState = golLogic.toggle(row, col);
+        GolCellState newState = logic.toggle(row, col);
 
         drawCell(gc, row, col, setFillBasedOnCellState(newState));
 
@@ -409,11 +344,11 @@ public class GolSceneBuilder extends SceneBuilder {
         int counter = 0;
 
         // Needs refactoring
-        for (IntCoordinates cell : golLogic.getLiveCells()) {
+        for (IntCoordinates cell : logic.getLiveCells()) {
             counter++;
             drawCell(gc, cell, setFillBasedOnCellState(GolCellState.ALIVE));
         }
-        for (IntCoordinates cell : golLogic.getDeadCells()) {
+        for (IntCoordinates cell : logic.getDeadCells()) {
             counter++;
             drawCell(gc, cell, setFillBasedOnCellState(GolCellState.DEAD));
         }

@@ -42,31 +42,6 @@ public abstract class SceneBuilder {
         center(main.getPrimaryStage());
     }
 
-    protected Button createButton(String text, EventHandler<ActionEvent> actionEventHandler) {
-        Button button = new Button(text);
-        button.setOnAction(actionEventHandler);
-        return button;
-    }
-
-    /**
-     * Creates simple tooltip for given text
-     * <p>ShowDelay and HideDelay are both set to 0</p>
-     */
-    protected Tooltip createTooltip(String text) {
-        Tooltip tooltip = new Tooltip(text);
-        tooltip.setShowDelay(Duration.millis(0));
-        tooltip.setHideDelay(Duration.millis(0));
-        return tooltip;
-    }
-    
-    protected void showAlertError(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
     public static void center(Stage stage) {
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
         stage.setX(screenBounds.getMinX() + (screenBounds.getWidth() - stage.getScene().getWidth()) / 2);

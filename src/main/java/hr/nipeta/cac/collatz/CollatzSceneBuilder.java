@@ -1,10 +1,11 @@
 package hr.nipeta.cac.collatz;
 
 import hr.nipeta.cac.Main;
-import hr.nipeta.cac.PeriodicAnimationTimer;
 import hr.nipeta.cac.SceneBuilder;
 import hr.nipeta.cac.collatz.rules.CollatzCell;
 import hr.nipeta.cac.model.Coordinates;
+import hr.nipeta.cac.model.gui.PeriodicAnimationTimer;
+import hr.nipeta.cac.model.gui.PeriodicAnimationTimerGuiControl;
 import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -12,7 +13,6 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -27,17 +27,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static hr.nipeta.cac.model.gui.SceneUtils.createButton;
+
 @Slf4j
 public class CollatzSceneBuilder extends SceneBuilder {
 
     private CollatzLogic collatzLogic;
-    private int collatzLastSequence;
     private Map<Long, CollatzSequenceDraw<Boolean>> collatzSequencesDraw;
-    private int collatzSequencesDrawIndex;
 
-    private TextField timelineDurationInput;
-
-    private PeriodicAnimationTimer timer;
+    private PeriodicAnimationTimerGuiControl timerControl;
 
     private Canvas canvas;
 
@@ -49,12 +47,10 @@ public class CollatzSceneBuilder extends SceneBuilder {
     public Scene createContent() {
 
         collatzLogic = new CollatzLogic();
+        collatzSequencesDraw = createCollatzSequences(5,1_000, new Coordinates<>(800.0, 600.0));
 
-        timer = PeriodicAnimationTimer.every(10).execute(this::drawCollatzSequences);
-
-        timelineDurationInput = new TextField();
-        timelineDurationInput.setPrefWidth(150);
-        timelineDurationInput.setPromptText("" + timer.getTimerDurationMs());
+        timerControl = new PeriodicAnimationTimerGuiControl(
+                PeriodicAnimationTimer.every(10).execute(this::drawCollatzSequences));
 
         canvas = new Canvas(1600, 1200);
         StackPane wrapper = new StackPane(canvas);
@@ -68,76 +64,20 @@ public class CollatzSceneBuilder extends SceneBuilder {
 
     private Node mainMenu() {
         return horizontalMenu(
-                startButton(),
-                stopButton(),
-                timelineDurationInput(),
-                timelineDurationButton(),
+                timerControl.getStartButton(),
+                timerControl.getStopButton(),
+                timerControl.getDurationInput(),
                 welcomeScreenButton()
         );
     }
 
-    private Button startButton() {
-        return createButton("Start", event -> {
-            if (!timer.isPlaying()) {
-                collatzSequencesDraw = createCollatzSequences(5,1_000);
-                timer.start();
-            }
-        });
-    }
-
-    private Button stopButton() {
-        return createButton("Stop", event -> {
-            if (timer.isPlaying()) {
-                timer.stop();
-            }
-        });
-    }
-
-    private Node timelineDurationInput() {
-        return onTextInputEnter(timelineDurationInput, this::onTimelineDurationInputSubmit);
-    }
-
-    private Button timelineDurationButton() {
-        return createButton("Set ms", event -> onTimelineDurationInputSubmit());
-    }
-
-    private void onTimelineDurationInputSubmit() {
-
-        Integer msDuration = parseTimelineDurationInput(timelineDurationInput.getText());
-
-        if (msDuration != null) {
-            timer.stopToExecuteThenRestart(() -> {
-                timer.setTimerDurationMs(msDuration);
-                timelineDurationInput.setPromptText("" + msDuration);
-            });
-        }
-
-    }
-
-    private Integer parseTimelineDurationInput(String input) {
-        try {
-            int intInput = Integer.parseInt(input);
-            if (intInput < 20 || intInput > 30_000) {
-                showAlertError("Frequency must be between 20ms and 30000ms.");
-                return null;
-            } else {
-                return intInput;
-            }
-        } catch (NumberFormatException ex) {
-            showAlertError("Invalid number. Please enter a valid number.");
-            return null;
-        }
-    }
-
-    private Map<Long, CollatzSequenceDraw<Boolean>> createCollatzSequences(long start, long end) {
+    private Map<Long, CollatzSequenceDraw<Boolean>> createCollatzSequences(long start, long end, Coordinates<Double> startCoordinates) {
 
         long milli = System.currentTimeMillis();
 
         Map<Long, CollatzSequenceDraw<Boolean>> allSequences = new HashMap<>();
 
         double progressStep = 0.1d;
-
-        Coordinates<Double> startCoordinates = new Coordinates<>(canvas.getWidth() / 2, canvas.getHeight() / 2);
 
         for (long i = start; i <= end; i++) {
 
@@ -212,8 +152,6 @@ public class CollatzSceneBuilder extends SceneBuilder {
             }
 
         });
-
-        collatzSequencesDrawIndex++;
 
         log.debug("drew sequences in {}ms", (System.currentTimeMillis() - milli));
 

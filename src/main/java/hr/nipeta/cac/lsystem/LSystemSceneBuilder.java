@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static hr.nipeta.cac.model.gui.SceneUtils.*;
+
 public class LSystemSceneBuilder extends SceneBuilder {
 
     private static List<LSystemRules> interestingRules = Arrays.asList(

@@ -1,8 +1,8 @@
 package hr.nipeta.cac.fract.logistic;
 
 import hr.nipeta.cac.Main;
-import hr.nipeta.cac.PeriodicAnimationTimer;
 import hr.nipeta.cac.SceneBuilder;
+import hr.nipeta.cac.model.gui.PeriodicAnimationTimer;
 import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -18,6 +18,8 @@ import javafx.scene.paint.Color;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+
+import static hr.nipeta.cac.model.gui.SceneUtils.*;
 
 @Slf4j
 public class LogisticSceneBuilder extends SceneBuilder {
@@ -48,7 +50,7 @@ public class LogisticSceneBuilder extends SceneBuilder {
 
         timelineDurationInput = new TextField();
         timelineDurationInput.setPrefWidth(150);
-        timelineDurationInput.setPromptText("" + timer.getTimerDurationMs());
+        timelineDurationInput.setPromptText("" + timer.getDurationMs());
 
         Region parent = new VBox(10, mainMenu(), caGridWrapped());
         parent.setPadding(new Insets(10));
@@ -115,7 +117,7 @@ public class LogisticSceneBuilder extends SceneBuilder {
             if (timer.isPlaying()) {
                 timer.stop();
             }
-            timer.setTimerDurationMs(msDuration);
+            timer.setDurationMs(msDuration);
             timelineDurationInput.setPromptText("" + msDuration);
             if (!timer.isPlaying()) {
                 timer.start();

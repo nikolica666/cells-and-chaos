@@ -1,8 +1,9 @@
 package hr.nipeta.cac.ca;
 
 import hr.nipeta.cac.Main;
-import hr.nipeta.cac.PeriodicAnimationTimer;
 import hr.nipeta.cac.SceneBuilder;
+import hr.nipeta.cac.model.gui.PeriodicAnimationTimer;
+import hr.nipeta.cac.model.gui.PeriodicAnimationTimerGuiControl;
 import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -19,6 +20,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Random;
 
+import static hr.nipeta.cac.model.gui.SceneUtils.createButton;
+import static hr.nipeta.cac.model.gui.SceneUtils.showAlertError;
+
 @Slf4j
 public class CellularAutomataSceneBuilder extends SceneBuilder {
 
@@ -31,9 +35,7 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
     private static final double RECT_BORDER_WIDTH = 0;
     private static final double RECT_TOTAL_SIZE = RECT_SIZE + RECT_BORDER_WIDTH;
 
-    private TextField timelineDurationInput;
-
-    private PeriodicAnimationTimer timer;
+    private PeriodicAnimationTimerGuiControl timerControl;
 
     private int rule;
     private TextField ruleInput;
@@ -52,11 +54,7 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
         caLogic = new CellularAutomataLogic(GRID_SIZE_X, GRID_SIZE_Y);
         caLogic.init(rule);
 
-        timer = PeriodicAnimationTimer.every(20).execute(this::evolveAndDraw);
-
-        timelineDurationInput = new TextField();
-        timelineDurationInput.setPrefWidth(150);
-        timelineDurationInput.setPromptText("" + timer.getTimerDurationMs());
+        timerControl = new PeriodicAnimationTimerGuiControl(PeriodicAnimationTimer.every(20).execute(this::evolveAndDraw));
 
         ruleInput = new TextField();
         ruleInput.setPrefWidth(75);
@@ -70,57 +68,18 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
 
     private Node mainMenu() {
         return horizontalMenu(
-                startButton(),
-                stopButton(),
+                timerControl.getStartButton(),
+                timerControl.getStopButton(),
                 stepButton(),
-                timelineDurationInput(),
-                timelineDurationButton(),
+                timerControl.getDurationInput(),
                 ruleInput(),
                 ruleButton(),
                 welcomeScreenButton()
         );
     }
 
-    private Button startButton() {
-        return createButton("Start", event -> {
-            if (!timer.isPlaying()) {
-                evolveAndDraw();
-                timer.start();
-            }
-        });
-    }
-
-    private Button stopButton() {
-        return createButton("Stop", event -> {
-            if (timer.isPlaying()) {
-                timer.stop();
-            }
-        });
-    }
-
     private Button stepButton() {
         return createButton("Step", event -> evolveAndDraw());
-    }
-
-    private Node timelineDurationInput() {
-        return onTextInputEnter(timelineDurationInput, this::onTimelineDurationInputSubmit);
-    }
-
-    private Button timelineDurationButton() {
-        return createButton("Set ms", event -> onTimelineDurationInputSubmit());
-    }
-
-    private void onTimelineDurationInputSubmit() {
-
-        final Integer msDuration = parseTimelineDurationInput(timelineDurationInput.getText());
-
-        if (msDuration != null) {
-            timer.stopToExecuteThenRestart(() -> {
-                timer.setTimerDurationMs(msDuration);
-                timelineDurationInput.setPromptText("" + msDuration);
-            });
-        }
-
     }
 
     private Integer parseTimelineDurationInput(String input) {

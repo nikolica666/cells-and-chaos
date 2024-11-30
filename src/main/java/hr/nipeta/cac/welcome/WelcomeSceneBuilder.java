@@ -17,6 +17,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 
+import static hr.nipeta.cac.model.gui.SceneUtils.createButton;
+
 public class WelcomeSceneBuilder extends SceneBuilder {
 
     public WelcomeSceneBuilder(Main main) {
