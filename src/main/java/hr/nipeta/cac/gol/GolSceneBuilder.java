@@ -187,30 +187,32 @@ public class GolSceneBuilder extends SceneBuilder {
             String selectedRule = rulesSelector.getValue();
 
             switch (selectedRule) {
-                case "Conway":
+                case "Conway (B3/S23)":
                     logic.setRules(new GolConwayRules());
                     break;
-                case "Anneal":
+                case "Anneal (B4678/S35678)":
                     logic.setRules(new GolAnnealRules());
                     break;
-                case "DayAndNight":
+                case "DayAndNight (B3678/S34678)":
                     logic.setRules(new GolDayAndNightRules());
                     break;
-                case "Diamoeba":
+                case "Diamoeba (B35678/S5678)":
                     logic.setRules(new GolDiamoebaRules());
                     break;
-                case "HighLife":
+                case "HighLife (B36/S23)":
                     logic.setRules(new GolHighLifeRules());
                     break;
-                case "Seeds":
+                case "Seeds (B2/S)":
                     logic.setRules(new GolSeedsRules());
                     break;
                 default:
                     boolean validInput = GolCustomRules.convertAndValidatePattern(selectedRule);
-                    if (!validInput) {
+                    if (validInput) {
+                        logic.setRules(new GolCustomRules(selectedRule));
+                    } else {
                         showAlertError("Custom pattern must be in regex 'B[0-8]*/S[0-8]*' (e.g. 'B3/S23' or 'B278/S' or 'B024/S045')");
                     }
-                    logic.setRules(new GolCustomRules(selectedRule));
+
             }
         });
 
