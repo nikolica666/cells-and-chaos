@@ -1,0 +1,9 @@
+#C This is first comment 
+#c this is second comment
+#C This is third comment
+#N This is name of the pattern
+
+x = 3, y = 3
+
+
+bo$2bo$3o!
