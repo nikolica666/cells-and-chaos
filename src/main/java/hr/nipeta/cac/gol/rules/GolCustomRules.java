@@ -10,13 +10,13 @@ import java.util.Set;
 import static java.util.stream.Collectors.joining;
 
 @Slf4j
-public class GolCustomRules implements GolRules {
+public class GolCustomRules extends GolRules {
 
     private final Set<Integer> toBecomeAlive;
     private final Set<Integer> toStayAlive;
     private final String patternNotation;
 
-    public static boolean convertAndValidatePattern(String pattern) {
+    public static boolean validatePattern(String pattern) {
 
         if (pattern == null) {
             return false;
@@ -36,20 +36,19 @@ public class GolCustomRules implements GolRules {
 
     }
 
-    public GolCustomRules(String patternNotation) {
+    public GolCustomRules(String pattern) {
 
-        patternNotation = patternNotation.replaceAll("\\s+", "");
-
-        if (!patternNotation.matches("B[0-8]*/S[0-8]*")) {
+        boolean patternValid = validatePattern(pattern);
+        if (!patternValid) {
             throw new RuntimeException("Bad pattern, expecting Bx/Sy (born/survive) and numbers 0-8 (or no number)");
         }
 
-        this.patternNotation = patternNotation;
+        pattern = pattern.replaceAll("\\s+", "");
 
         this.toBecomeAlive = new HashSet<>();
         this.toStayAlive = new HashSet<>();
 
-        String[] splitBS = patternNotation.split("/");
+        String[] splitBS = pattern.split("/");
 
         for (char c : splitBS[0].toCharArray()) {
             if (Character.isDigit(c)) { // Check if the character is a digit
@@ -63,7 +62,9 @@ public class GolCustomRules implements GolRules {
             }
         }
 
-        log.info("Created custom rules {}", patternNotation);
+        this.patternNotation = pattern;
+
+        log.info("Created custom rules {}", pattern);
 
     }
 
@@ -102,4 +103,10 @@ public class GolCustomRules implements GolRules {
     public String getPatternNotation() {
         return patternNotation;
     }
+
+    @Override
+    public String getName() {
+        return "Custom";
+    }
+
 }

@@ -2,6 +2,7 @@ package hr.nipeta.cac.fract.mandlebrot;
 
 import hr.nipeta.cac.fract.model.FractalResult;
 import hr.nipeta.cac.model.ComplexNumber;
+import hr.nipeta.cac.model.Coordinates;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;

@@ -1,6 +1,5 @@
-package hr.nipeta.cac.gol;
+package hr.nipeta.cac.gol.file.parser;
 
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
@@ -15,11 +14,11 @@ import java.util.List;
  * @see <a href="https://conwaylife.com/wiki/plaintext">Game of Life wiki</a>
  */
 @Slf4j
-public class GolFileParserPlain {
+public class GolFileParserPlain implements GolFileParser {
 
     private final GolFileParserResult result = new GolFileParserResult();
 
-    public static GolFileParserResult parse(File file) throws IOException {
+    public GolFileParserResult parse(File file) throws IOException {
         return new GolFileParserPlain().parseFile(file);
     }
 
@@ -33,8 +32,6 @@ public class GolFileParserPlain {
 
         String line;
         List<int[]> liveCells = new ArrayList<>();
-
-        boolean headerLineRead = false;
 
         while ((line = reader.readLine()) != null) {
 
@@ -73,7 +70,7 @@ public class GolFileParserPlain {
 
         }
 
-        result.liveCells = liveCells;
+        result.setLiveCells(liveCells);
 
         return result;
 
@@ -89,21 +86,10 @@ public class GolFileParserPlain {
      **/
     private void parseExclamationLine(String line) {
         if (line.startsWith("!Name:")) {
-            result.name = line.substring(line.indexOf("!Name:"));
+            result.setName(line.substring(line.indexOf("!Name:")));
         } else {
-            result.comments.add(line.substring(1));
+            result.getComments().add(line.substring(1));
         }
     }
 
-    @Data
-    public static class GolFileParserResult {
-        private int sizeX, sizeY;
-        private boolean startRelative;
-        private int startX, startY;
-        private String rule;
-        private List<int[]> liveCells;
-        private List<String> comments = new ArrayList<>();
-        private String name;
-        private String createdBy;
-    }
 }

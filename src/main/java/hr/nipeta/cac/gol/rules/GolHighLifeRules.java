@@ -5,7 +5,7 @@ import hr.nipeta.cac.gol.model.GolCell;
 /**
  *  Rule B36/S23 - 'High life'
  **/
-public class GolHighLifeRules implements GolRules {
+public class GolHighLifeRules extends GolRules {
 
     public boolean becomeAlive(GolCell[] neighbours) {
         int liveNeighbours = countLiveNeighbours(neighbours, 6);
@@ -30,6 +30,11 @@ public class GolHighLifeRules implements GolRules {
     @Override
     public String getPatternNotation() {
         return "B36/S23";
+    }
+
+    @Override
+    public String getName() {
+        return "High life";
     }
 
 }

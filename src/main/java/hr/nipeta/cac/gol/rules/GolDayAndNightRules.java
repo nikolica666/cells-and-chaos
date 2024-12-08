@@ -5,7 +5,7 @@ import hr.nipeta.cac.gol.model.GolCell;
 /**
  *  Rule B3678/S34678 - 'Day & Night'
  **/
-public class GolDayAndNightRules implements GolRules {
+public class GolDayAndNightRules extends GolRules {
 
     public boolean becomeAlive(GolCell[] neighbours) {
         return becomeAlive(countLiveNeighbours(neighbours));
@@ -28,6 +28,11 @@ public class GolDayAndNightRules implements GolRules {
     @Override
     public String getPatternNotation() {
         return "B3678/S34678";
+    }
+
+    @Override
+    public String getName() {
+        return "Day and Night";
     }
 
 }

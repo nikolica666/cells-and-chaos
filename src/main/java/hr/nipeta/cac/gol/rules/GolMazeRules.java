@@ -3,9 +3,9 @@ package hr.nipeta.cac.gol.rules;
 import hr.nipeta.cac.gol.model.GolCell;
 
 /**
- * B3/S12345
+ * Maze (B3/S12345)
  */
-public class GolMazeRules implements GolRules {
+public class GolMazeRules extends GolRules {
 
     @Override
     public boolean becomeAlive(GolCell[] neighbours) {
@@ -30,6 +30,11 @@ public class GolMazeRules implements GolRules {
     @Override
     public String getPatternNotation() {
         return "B3/S12345";
+    }
+
+    @Override
+    public String getName() {
+        return "Maze";
     }
 
 }

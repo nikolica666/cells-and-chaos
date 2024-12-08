@@ -2,31 +2,40 @@ package hr.nipeta.cac.gol;
 
 import hr.nipeta.cac.Main;
 import hr.nipeta.cac.SceneBuilder;
-import hr.nipeta.cac.gol.count.NeighbourCountBox;
-import hr.nipeta.cac.gol.count.NeighbourCountOpen;
+import hr.nipeta.cac.gol.count.NeighbourCountFactory;
 import hr.nipeta.cac.gol.count.NeighbourCountWrap;
+import hr.nipeta.cac.gol.file.parser.GolFileParserFactory;
+import hr.nipeta.cac.gol.file.parser.GolFileParserResult;
 import hr.nipeta.cac.gol.model.GolCellState;
 import hr.nipeta.cac.gol.rules.*;
 import hr.nipeta.cac.model.IntCoordinates;
 import hr.nipeta.cac.model.RectangularGrid;
+import hr.nipeta.cac.model.gui.PercentLabelGuiControl;
 import hr.nipeta.cac.model.gui.PeriodicAnimationTimer;
 import hr.nipeta.cac.model.gui.PeriodicAnimationTimerGuiControl;
 import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
+import javafx.stage.FileChooser;
+import javafx.stage.Popup;
 import lombok.extern.slf4j.Slf4j;
+
+import java.io.*;
+import java.nio.file.Path;
+import java.util.List;
 
 import static hr.nipeta.cac.model.gui.SceneUtils.*;
 import static java.lang.System.currentTimeMillis;
@@ -46,6 +55,8 @@ public class GolSceneBuilder extends SceneBuilder {
     private double scaleFactor = 1.0;
 
     private TextField cellSizeInput;
+    private PercentLabelGuiControl livePercentLabel;
+
 
     public GolSceneBuilder(Main main) {
         super(main);
@@ -54,28 +65,159 @@ public class GolSceneBuilder extends SceneBuilder {
     @Override
     public Scene createContent() {
 
-        rectangularGrid = RectangularGrid.of(100,200,10,1);
+        rectangularGrid = RectangularGrid.of(64,128,12,1);
         logic = new GolLogic(rectangularGrid.getCols(), rectangularGrid.getRows(), new GolConwayRules(), new NeighbourCountWrap());
 
-        timerControl = new PeriodicAnimationTimerGuiControl(
-                PeriodicAnimationTimer.every(125).execute(this::evolveAndDrawGrid));
+        timerControl = PeriodicAnimationTimerGuiControl.of(PeriodicAnimationTimer.every(125).execute(this::evolveAndDrawGrid));
 
         cellSizeInput = createInput("" + rectangularGrid.getCellSize(), 150, createTooltip("Cell size"), this::onCellSizeInputSubmit);
+
+        livePercentLabel = PercentLabelGuiControl.of("Alive ");
 
         Region parent = new VBox(10,
                 mainMenu(),
                 zoomableCanvas(
                         rectangularGrid.getCols() * rectangularGrid.getCellSizeWithBorder(),
-                        rectangularGrid.getRows() * rectangularGrid.getCellSizeWithBorder()));
+                        rectangularGrid.getRows() * rectangularGrid.getCellSizeWithBorder()),
+                statistics());
         parent.setPadding(new Insets(10));
         return new Scene(parent);
 
+    }
+
+    private Node statistics() {
+        return horizontalMenu(
+                livePercentLabel
+        );
+    }
+
+    private Node patternsPopup() {
+
+        Button showPopupButton = new Button("Patterns");
+        Label resultLabel = new Label("Your choice: None");
+
+        Popup popup = new Popup();
+        popup.setAutoHide(true);
+
+        VBox popupContent = new VBox(10);
+        popupContent.setPadding(new Insets(10));
+        popupContent.setStyle("-fx-background-color: #ffffff; -fx-border-color: #cccccc; -fx-border-radius: 5px; -fx-background-radius: 5px;");
+
+        Label promptLabel = new Label("Choose an option:");
+        Button option1 = new Button("Option 1");
+        Button option2 = new Button("Option 2");
+
+        option1.setOnAction(e -> {
+            resultLabel.setText("Your choice: Option 1");
+            popup.hide();
+        });
+
+        option2.setOnAction(e -> {
+            resultLabel.setText("Your choice: Option 2");
+            popup.hide();
+        });
+
+        popupContent.getChildren().addAll(promptLabel, testScrollSelection(), patternFileUpload());
+        popupContent.setAlignment(Pos.CENTER);
+
+        // Add content to the Popup
+        popup.getContent().add(popupContent);
+
+        showPopupButton.setOnAction(e -> popup.show(main.getPrimaryStage()));
+
+        return showPopupButton;
+
+    }
+
+    private Node patternFileUpload() {
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Upload Initial State");
+
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("RLE Files", "*.rle"),
+                new FileChooser.ExtensionFilter("Plaintext Files", "*.cells"),
+                new FileChooser.ExtensionFilter("All Files", "*.*")
+        );
+
+        Button uploadButton = new Button("Upload Pattern");
+        uploadButton.setOnAction(e -> {
+
+            File selectedFile = fileChooser.showOpenDialog(main.getPrimaryStage());
+            if (selectedFile == null) {
+                return;
+            }
+
+            try {
+
+                GolFileParserResult parseResult = GolFileParserFactory.parse(selectedFile);
+
+                logic.setAllDead();
+                drawEmptyGrid(canvas.getGraphicsContext2D());
+
+                List<int[]> liveCells = parseResult.getLiveCells();
+                int startX = rectangularGrid.getCols() / 2 - liveCells.getFirst().length / 2;
+                int startY = rectangularGrid.getRows() / 2 - liveCells.size() / 2;
+
+                for (int rowIndex = 0; rowIndex < liveCells.size(); rowIndex++) {
+                    int[] row = liveCells.get(rowIndex);
+                    for (int colIndex = 0; colIndex < row.length; colIndex++) {
+                        if (row[colIndex] == 1) {
+                            GolCellState newState = logic.toggle(startY + rowIndex, startX + colIndex);
+                            drawCell(canvas.getGraphicsContext2D(), startY + rowIndex, startX + colIndex, setFillBasedOnCellState(newState));
+                        }
+                    }
+                }
+
+                livePercentLabel.set((double) logic.getLiveCells().size() / rectangularGrid.getNumberOfCells());
+
+                // TODO could use custom exception to be more precise on GUI when something's wrong
+            } catch (Exception ex) {
+                log.error(ex.getMessage(), ex);
+                showAlertError("Error reading file:" + ex.getMessage());
+            }
+
+        });
+
+        VBox layout = new VBox(10, uploadButton);
+        layout.setStyle("-fx-padding: 20; -fx-alignment: center;");
+
+        return layout;
+
+    }
+
+    private Node testScrollSelection() {
+
+        VBox content = new VBox(10);
+
+        try (InputStream inputStream = GolSceneBuilder.class.getResourceAsStream("/hr/nipeta/cac/gol/patterns/lexicon.txt");
+             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+
+
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        for (int i = 1; i <= 90; i++) {
+            TextFlow item = new TextFlow(new Text("Custom Item " + i));
+            item.setStyle("-fx-padding: 10px; -fx-background-color: lightgray; -fx-border-color: black;");
+            content.getChildren().add(item);
+        }
+
+        ScrollPane scrollPane = new ScrollPane(content);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setPrefSize(300, 400); // Set preferred size
+        scrollPane.setMaxSize(300, 400);  // Limi
+
+        return scrollPane;
     }
 
     private void evolveAndDrawGrid() {
         long milli = System.currentTimeMillis();
         evolve();
         drawGrid(canvas.getGraphicsContext2D());
+        livePercentLabel.set((double) logic.getLiveCells().size() / rectangularGrid.getNumberOfCells());
         log.debug("Evolved and drew in {}ms", currentTimeMillis() - milli);
     }
 
@@ -94,6 +236,7 @@ public class GolSceneBuilder extends SceneBuilder {
                 rulesSelector(),
                 neighbourCountSelector(),
                 cellSizeInput,
+                patternsPopup(),
                 welcomeScreenButton()
         );
     }
@@ -159,6 +302,7 @@ public class GolSceneBuilder extends SceneBuilder {
             logic.setAllDead();
 
             drawEmptyGrid(canvas.getGraphicsContext2D());
+            livePercentLabel.reset();
 
         });
 
@@ -171,49 +315,47 @@ public class GolSceneBuilder extends SceneBuilder {
 
             drawGrid(canvas.getGraphicsContext2D());
 
+            livePercentLabel.set((double) logic.getLiveCells().size() / rectangularGrid.getNumberOfCells());
+
         });
     }
 
     private ComboBox<String> rulesSelector() {
 
         ComboBox<String> rulesSelector = new ComboBox<>();
-        rulesSelector.getItems().addAll("Conway", "Anneal", "DayAndNight", "Diamoeba", "HighLife", "Seeds");
-        rulesSelector.setValue("Conway"); // Default selection
-        rulesSelector.setPrefWidth(250);
+        rulesSelector.getItems().addAll(GolRules.GAME_OF_LIFE_RULE_LABELS);
+        rulesSelector.setValue("Conway (B3/S23)"); // Default selection
+        rulesSelector.setPrefWidth(300);
         rulesSelector.getEditor().setContextMenu(null); // Preventing popup when typing in editor field
         rulesSelector.setEditable(true);
-        rulesSelector.setTooltip(createTooltip("Born/Survive rules (classical rule is 'Conway' B3/S23 - born when 3 live neighbours, survive if 2 or 3 live neighbours)"));
+        rulesSelector.setTooltip(
+                createTooltip("""
+                        Born/Survive rules e.g. B2/S45 = Born if 2 neighbours, Survive if 4 or 5\r\n
+                        (classical rule is 'Conway' B3/S23 - born when 3 live neighbours, 
+                        survive if 2 or 3 live neighbours)\r\n
+                        It is possible to type in custom rule"""));
         rulesSelector.setOnAction(e -> {
-            String selectedRule = rulesSelector.getValue();
 
-            switch (selectedRule) {
-                case "Conway (B3/S23)":
-                    logic.setRules(new GolConwayRules());
-                    break;
-                case "Anneal (B4678/S35678)":
-                    logic.setRules(new GolAnnealRules());
-                    break;
-                case "DayAndNight (B3678/S34678)":
-                    logic.setRules(new GolDayAndNightRules());
-                    break;
-                case "Diamoeba (B35678/S5678)":
-                    logic.setRules(new GolDiamoebaRules());
-                    break;
-                case "HighLife (B36/S23)":
-                    logic.setRules(new GolHighLifeRules());
-                    break;
-                case "Seeds (B2/S)":
-                    logic.setRules(new GolSeedsRules());
-                    break;
-                default:
-                    boolean validInput = GolCustomRules.convertAndValidatePattern(selectedRule);
-                    if (validInput) {
-                        logic.setRules(new GolCustomRules(selectedRule));
-                    } else {
-                        showAlertError("Custom pattern must be in regex 'B[0-8]*/S[0-8]*' (e.g. 'B3/S23' or 'B278/S' or 'B024/S045')");
-                    }
+            String selectedRuleLabel = rulesSelector.getValue();
 
+            if (selectedRuleLabel == null) {
+                return;
             }
+
+            // If user selected rule from dropdown
+            if (rulesSelector.getItems().contains(selectedRuleLabel)) {
+                logic.setRules(GolRules.fromLabel(selectedRuleLabel));
+            }
+            // If user typed in rule
+            else {
+                boolean validInput = GolCustomRules.validatePattern(selectedRuleLabel);
+                if (validInput) {
+                    logic.setRules(new GolCustomRules(selectedRuleLabel));
+                } else {
+                    showAlertError("Custom pattern must be in regex 'B[0-8]*/S[0-8]*' (e.g. 'B3/S23' or 'B278/S' or 'B024/S045')");
+                }
+            }
+
         });
 
         return rulesSelector;
@@ -228,18 +370,8 @@ public class GolSceneBuilder extends SceneBuilder {
         neighbourCountSelector.setPrefWidth(150);
         neighbourCountSelector.setTooltip(createTooltip("Border type"));
         neighbourCountSelector.setOnAction(e -> {
-            String selectedRule = neighbourCountSelector.getValue();
-            switch (selectedRule) {
-                case "Box":
-                    logic.setNeighbourCount(new NeighbourCountBox());
-                    break;
-                case "Open":
-                    logic.setNeighbourCount(new NeighbourCountOpen());
-                    break;
-                case "Wrap":
-                    logic.setNeighbourCount(new NeighbourCountWrap());
-                    break;
-            }
+            String selectedNeighbourCount = neighbourCountSelector.getValue();
+            logic.setNeighbourCount(NeighbourCountFactory.from(selectedNeighbourCount));
         });
 
         return neighbourCountSelector;
@@ -322,6 +454,8 @@ public class GolSceneBuilder extends SceneBuilder {
         GolCellState newState = logic.toggle(row, col);
 
         drawCell(gc, row, col, setFillBasedOnCellState(newState));
+
+        livePercentLabel.set((double) logic.getLiveCells().size() / rectangularGrid.getNumberOfCells());
 
     }
 

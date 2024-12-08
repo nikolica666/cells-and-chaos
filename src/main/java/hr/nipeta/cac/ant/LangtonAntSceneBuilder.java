@@ -4,6 +4,7 @@ import hr.nipeta.cac.Main;
 import hr.nipeta.cac.SceneBuilder;
 import hr.nipeta.cac.model.Coordinates;
 import hr.nipeta.cac.model.IntCoordinates;
+import hr.nipeta.cac.model.gui.CounterLabelGuiControl;
 import hr.nipeta.cac.model.gui.PeriodicAnimationTimer;
 import hr.nipeta.cac.model.gui.PeriodicAnimationTimerGuiControl;
 import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
@@ -43,8 +44,9 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
 
     private PeriodicAnimationTimerGuiControl timerControl;
 
-    private long counter;
-    private Label counterLabel;
+    private CounterLabelGuiControl countControl;
+//    private long counter;
+//    private Label counterLabel;
 
     private GraphicsContext gc;
 
@@ -62,7 +64,8 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
         antLogic = new LangtonAntLogic(GRID_SIZE_X, GRID_SIZE_Y);
         antLogic.init(antRules);
 
-        timerControl = new PeriodicAnimationTimerGuiControl(PeriodicAnimationTimer.every(20).execute(this::evolveAndDraw));
+        timerControl = PeriodicAnimationTimerGuiControl.of(PeriodicAnimationTimer.every(20).execute(this::evolveAndDraw));
+        countControl = CounterLabelGuiControl.of("Steps: ");
 
         Region parent = new VBox(10, mainMenu(), antGridWrapped());
         parent.setPadding(new Insets(10));
@@ -77,7 +80,7 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
                 stepButton(),
                 timerControl.getDurationInput(),
                 antRulesInput,
-                counterLabel(),
+                countControl,
                 welcomeScreenButton()
         );
     }
@@ -105,12 +108,8 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
         this.antRules = input;
         antLogic.init(antRules);
         drawGrid(gc);
+        countControl.reset();
 
-    }
-
-    private Label counterLabel() {
-        counterLabel = new Label("Counter: " + counter);
-        return counterLabel;
     }
 
     private Button welcomeScreenButton() {
@@ -138,8 +137,7 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
         long milli = System.currentTimeMillis();
         antLogic.evolve();
         drawGrid(gc);
-        counter++;
-        counterLabel.setText("Counter: " + counter);
+        countControl.increment();
         log.debug("Evolved in {}ms", System.currentTimeMillis()- milli);
     }
 

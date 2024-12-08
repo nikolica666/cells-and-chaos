@@ -5,7 +5,7 @@ import hr.nipeta.cac.gol.model.GolCell;
 /**
  * B1357/S1357
  */
-public class GolReplicatorRules implements GolRules {
+public class GolReplicatorRules extends GolRules {
 
 
     @Override
@@ -31,6 +31,11 @@ public class GolReplicatorRules implements GolRules {
     @Override
     public String getPatternNotation() {
         return "B1357/S1357";
+    }
+
+    @Override
+    public String getName() {
+        return "Replicator";
     }
 
 }

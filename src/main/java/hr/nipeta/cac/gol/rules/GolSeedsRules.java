@@ -5,7 +5,7 @@ import hr.nipeta.cac.gol.model.GolCell;
 /**
  * Rule B2/S - 'Seeds'
  */
-public class GolSeedsRules implements GolRules {
+public class GolSeedsRules extends GolRules {
 
     @Override
     public boolean becomeAlive(GolCell[] neighbours) {
@@ -30,6 +30,11 @@ public class GolSeedsRules implements GolRules {
     @Override
     public String getPatternNotation() {
         return "B2/S";
+    }
+
+    @Override
+    public String getName() {
+        return "Seeds";
     }
 
 }

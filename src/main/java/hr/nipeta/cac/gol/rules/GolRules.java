@@ -3,30 +3,21 @@ package hr.nipeta.cac.gol.rules;
 import hr.nipeta.cac.gol.model.GolCell;
 import hr.nipeta.cac.gol.model.GolCellState;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Rules for classical Born/Survive rules i.e. 2 GolCellStates
  */
-public interface GolRules {
+public abstract class GolRules {
 
-    default GolCellState nextState(GolCellState currentState, GolCell[] neighbours) {
-        switch (currentState) {
-            case DEAD -> {
-                return becomeAlive(neighbours) ? GolCellState.ALIVE : GolCellState.DEAD;
-            }
-            case ALIVE -> {
-                return stayAlive(neighbours) ? GolCellState.ALIVE : GolCellState.DEAD;
-            }
-            default -> throw new RuntimeException("Unexpected current state " + currentState);
-        }
-    }
-
-    boolean becomeAlive(GolCell[] neighbours);
-    boolean becomeAlive(int liveNeighbours);
-    boolean stayAlive(GolCell[] neighbours);
-    boolean stayAlive(int liveNeighbours);
+    public abstract boolean becomeAlive(GolCell[] neighbours);
+    public abstract boolean becomeAlive(int liveNeighbours);
+    public abstract boolean stayAlive(GolCell[] neighbours);
+    public abstract boolean stayAlive(int liveNeighbours);
 
     // TODO refactor this altough we'll probably end up deleting and use something optimal
-    default int countLiveNeighbours(GolCell[] neighbours, Integer enoughLiveNeighbours) {
+    final int countLiveNeighbours(GolCell[] neighbours, Integer enoughLiveNeighbours) {
 
         int numberOfLiveNeighbours = 0;
 
@@ -43,7 +34,7 @@ public interface GolRules {
 
     }
 
-    default int countLiveNeighbours(GolCell[] neighbours) {
+    final int countLiveNeighbours(GolCell[] neighbours) {
 
         int numberOfLiveNeighbours = 0;
 
@@ -61,6 +52,42 @@ public interface GolRules {
      *
      * @return pattern notation in Bx/Sy format (B = born, S = survive)
      */
-    String getPatternNotation();
+    public abstract String getPatternNotation();
+
+    /**
+     * @return name of pattern (e.g. Conway, Annel, Day and Night)
+     */
+    public abstract String getName();
+
+    public static final List<String> GAME_OF_LIFE_RULE_LABELS = Arrays.asList(
+            "Conway (B3/S23)",
+            "Anneal (B4678/S35678)",
+            "DayAndNight (B3678/S34678)",
+            "Diamoeba (B35678/S5678)",
+            "Fredkin (B1357/S02468)",
+            "HighLife (B36/S23)",
+            "Maze (B3/S12345)",
+            "Mazectric (B1234/S3)",
+            "Morley (B368/S245)",
+            "Replicator (B1357/S1357)",
+            "Seeds (B2/S)"
+    );
+
+    public static GolRules fromLabel(String ruleLabel) {
+        return switch (ruleLabel) {
+            case "Conway (B3/S23)" -> new GolConwayRules();
+            case "Anneal (B4678/S35678)" -> new GolAnnealRules();
+            case "DayAndNight (B3678/S34678)" -> new GolDayAndNightRules();
+            case "Diamoeba (B35678/S5678)" -> new GolDiamoebaRules();
+            case "Fredkin (B1357/S02468)" -> new GolFredkinRules();
+            case "HighLife (B36/S23)" -> new GolHighLifeRules();
+            case "Maze (B3/S12345)" -> new GolMazeRules();
+            case "Mazectric (B1234/S3)" -> new GolMazectric();
+            case "Morley (B368/S245)" -> new GolMorleyRules();
+            case "Replicator (B1357/S1357)" -> new GolReplicatorRules();
+            case "Seeds (B2/S)" -> new GolSeedsRules();
+            default -> throw new IllegalStateException(String.format("Unknown game of life label '%s'", ruleLabel));
+        };
+    }
 
 }

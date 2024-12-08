@@ -2,10 +2,7 @@ package hr.nipeta.cac.model.gui;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.util.Duration;
 
@@ -60,9 +57,15 @@ public class SceneUtils {
 
     public static void showAlertError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.initStyle(javafx.stage.StageStyle.UNDECORATED);
         alert.setTitle("Error");
         alert.setHeaderText(null);
         alert.setContentText(message);
+        alert.getDialogPane().getStylesheets().addAll(
+                SceneUtils.class.getResource("/css/font-lemonmilk.css").toExternalForm(),
+                SceneUtils.class.getResource("/css/main.css").toExternalForm()
+        );
+        alert.getDialogPane().getStyleClass().add(".dialog-pane");
         alert.showAndWait();
     }
 

@@ -9,6 +9,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
 @Slf4j
@@ -40,39 +41,41 @@ public class GolLogic {
     }
 
     public void randomize() {
-long mili = System.currentTimeMillis();
+        long mili = System.currentTimeMillis();
         this.liveCells = new HashSet<>();
         this.deadCells = new HashSet<>();
 
         for (int row = 0; row < GRID_SIZE_Y; row++) {
-                    for (int col = 0; col < GRID_SIZE_X; col++) {
-                        IntCoordinates coordinates = IntCoordinates.of(col, row);
-                        // TODO this will not work OK if we introduce more then 2 states
-                        if (new Random().nextBoolean()) {
-                            liveCells.add(coordinates);
-                        } else {
-                            deadCells.add(coordinates);
-                        }
-                    }
+            for (int col = 0; col < GRID_SIZE_X; col++) {
+                IntCoordinates coordinates = IntCoordinates.of(col, row);
+                // TODO this will not work OK if we introduce more then 2 states
+                if (new Random().nextBoolean()) {
+                    liveCells.add(coordinates);
+                } else {
+                    deadCells.add(coordinates);
+                }
+            }
         }
 
         log.debug("********* {}ms", (System.currentTimeMillis()-mili));
     }
 
     public void evolve() {
-
-        Map<IntCoordinates, Integer> neighborCounts = neighbourCount.count(liveCells, GRID_SIZE_X, GRID_SIZE_Y);
-
+        long milli = System.currentTimeMillis();
+        ConcurrentHashMap<IntCoordinates, Integer> neighborCounts = neighbourCount.count(liveCells, GRID_SIZE_X, GRID_SIZE_Y);
+        log.debug("Counted neighbours in {}ms", (System.currentTimeMillis() - milli));
         neighborCounts.forEach((n,c) -> {
             log.trace("{} has {} live neighbors", n, c);
         });
 
-        Set<IntCoordinates> newLiveCells = new HashSet<>();
-        Set<IntCoordinates> newDeadCells = new HashSet<>();
-
-        for (Map.Entry<IntCoordinates, Integer> entry : neighborCounts.entrySet()) {
-            IntCoordinates cell = entry.getKey();
+        Set<IntCoordinates> newLiveCells = ConcurrentHashMap.newKeySet();
+        Set<IntCoordinates> newDeadCells = ConcurrentHashMap.newKeySet();
+        long milli2 = System.currentTimeMillis();
+        neighborCounts.entrySet().stream().parallel().forEach(entry -> {
+//        neighborCounts.forEach((cell, value) -> {
+//        for (Map.Entry<IntCoordinates, Integer> entry : neighborCounts.entrySet()) {
             int liveNeighbours = entry.getValue();
+            IntCoordinates cell = entry.getKey();
             boolean cellCurrentlyAlive = liveCells.contains(cell);
             if (cellCurrentlyAlive) {
                 if (rules.stayAlive(liveNeighbours)) {
@@ -89,8 +92,9 @@ long mili = System.currentTimeMillis();
                 }
 
             }
-        }
-
+//        }
+        });
+        log.debug("Set ne states in {}ms", (System.currentTimeMillis() - milli2));
         Set<IntCoordinates> liveCellsThatBecameDead = new HashSet<>(liveCells);
         liveCellsThatBecameDead.removeAll(newLiveCells);
 

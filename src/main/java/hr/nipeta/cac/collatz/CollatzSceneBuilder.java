@@ -49,8 +49,7 @@ public class CollatzSceneBuilder extends SceneBuilder {
         collatzLogic = new CollatzLogic();
         collatzSequencesDraw = createCollatzSequences(5,1_000, new Coordinates<>(800.0, 600.0));
 
-        timerControl = new PeriodicAnimationTimerGuiControl(
-                PeriodicAnimationTimer.every(10).execute(this::drawCollatzSequences));
+        timerControl = PeriodicAnimationTimerGuiControl.of(PeriodicAnimationTimer.every(10).execute(this::drawCollatzSequences));
 
         canvas = new Canvas(1600, 1200);
         StackPane wrapper = new StackPane(canvas);

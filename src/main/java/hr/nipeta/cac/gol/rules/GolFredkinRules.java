@@ -5,7 +5,7 @@ import hr.nipeta.cac.gol.model.GolCell;
 /**
  * Fredkin (B1357/S02468)
  */
-public class GolFredkinRules implements GolRules {
+public class GolFredkinRules extends GolRules {
 
     @Override
     public boolean becomeAlive(GolCell[] neighbours) {
@@ -30,6 +30,11 @@ public class GolFredkinRules implements GolRules {
     @Override
     public String getPatternNotation() {
         return "B1357/S02468";
+    }
+
+    @Override
+    public String getName() {
+        return "Fredkin";
     }
 
 }

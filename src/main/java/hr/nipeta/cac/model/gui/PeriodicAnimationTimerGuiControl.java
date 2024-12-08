@@ -17,7 +17,11 @@ public class PeriodicAnimationTimerGuiControl extends Region {
 
     private TextField durationInput;
 
-    public PeriodicAnimationTimerGuiControl(PeriodicAnimationTimer timer) {
+    public static PeriodicAnimationTimerGuiControl of(PeriodicAnimationTimer timer) {
+        return new PeriodicAnimationTimerGuiControl(timer);
+    }
+
+    private PeriodicAnimationTimerGuiControl(PeriodicAnimationTimer timer) {
         this.timer = timer;
         this.startButton = createButton("Start", event -> {
             if (!timer.isPlaying()) {

@@ -174,6 +174,9 @@ public class JuliaSceneBuilder extends SceneBuilder {
             for (int y = 0; y < pixelsY; y++) {
                 FractalResult point = fractalResults[x][y];
                 if (point.isDiverged()) {
+                    // TODO ideas for better colors
+                    //  Color color = Color.hsb((double)point.getIterations() / MandlebrotLogic.MAX_ITERATIONS * 180, .7, .7); // HSB color model
+                    //  Color color = Color.color((double)point.getIterations() / MandlebrotLogic.MAX_ITERATIONS, 0, 0); // more then 255 red shades
                     Color color = COLORS_RED.get(point.getIterations());
                     pixelWriter.setColor(x, y, color);
                 }

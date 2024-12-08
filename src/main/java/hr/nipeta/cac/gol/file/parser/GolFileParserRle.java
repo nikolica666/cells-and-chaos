@@ -1,10 +1,11 @@
-package hr.nipeta.cac.gol;
+package hr.nipeta.cac.gol.file.parser;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -12,11 +13,11 @@ import java.util.List;
  * @see <a href="https://conwaylife.com/wiki/Run_Length_Encoded">Game of Life wiki</a>
  */
 @Slf4j
-public class GolFileParserRle {
+public class GolFileParserRle implements GolFileParser {
 
     private final GolFileParserResult result = new GolFileParserResult();
 
-    public static GolFileParserResult parse(File file) throws IOException {
+    public GolFileParserResult parse(File file) throws IOException {
         return new GolFileParserRle().parseFile(file);
     }
 
@@ -87,45 +88,74 @@ public class GolFileParserRle {
             throw new IllegalStateException("No data found!");
         }
 
-        // Rows are separated by $ sign
-        String[] golRowsFromFile = golRowsFromFileInSingleRow.split("\\$");
+        // Rows are separated by $ sign, but if there is number n in front of dollar, it means skip (n-1) empty rows
+        List<String> golRowsFromFileCompressed = Arrays.asList(golRowsFromFileInSingleRow.split("\\$"));
+        List<String> golRowsFromFile = new ArrayList<>();
 
-        // Number of rows should be less or equal compared to header y value (if it's less, missing rows are all 0s)
-        if (golRowsFromFile.length > result.sizeY) {
-            throw new IllegalStateException(String.format(
-                    "Header declared %s rows, data has %s!",
-                    result.sizeY,
-                    golRowsFromFile.length));
+        for (String row : golRowsFromFileCompressed) {
+
+            if (row.isEmpty()) {
+                golRowsFromFile.add("b"); // Add dummy empty row
+                continue;
+            }
+
+            // If row ends with number n, it means add (n-1) empty rows before next row
+            String numberOfEmptyRowsBehindThisStr = "";
+            while (Character.isDigit(row.charAt(row.length() - 1))) {
+                numberOfEmptyRowsBehindThisStr = row.charAt(row.length() - 1) + numberOfEmptyRowsBehindThisStr;
+                row = row.substring(0, row.length() - 1);
+            }
+
+            // Add this row for sure
+            golRowsFromFile.add(row);
+
+            // If we have to add some more rows...
+            if (!numberOfEmptyRowsBehindThisStr.isEmpty()) {
+                // If number was e.g. 3, it means we have to add 2 empty rows, and only then parse next non-empty row
+                Integer numberOfEmptyRowsBehindThis = Integer.parseInt(numberOfEmptyRowsBehindThisStr) - 1;
+                log.debug("Adding {} dummy rows", numberOfEmptyRowsBehindThis);
+                for (int i = 0; i < numberOfEmptyRowsBehindThis; i++) {
+                    golRowsFromFile.add("b"); // Add dummy empty row
+                }
+            }
         }
 
-        List<int[]> liveCells = new ArrayList<>(golRowsFromFile.length);
+        // Number of rows should be less or equal compared to header y value (if it's less, missing rows are all 0s)
+        if (golRowsFromFile.size() > result.getSizeY()) {
+            throw new IllegalStateException(String.format(
+                    "Header declared %s rows, data has %s!",
+                    result.getSizeY(),
+                    golRowsFromFile.size()));
+        }
+
+        List<int[]> liveCells = new ArrayList<>(golRowsFromFile.size());
         for (String golRowFromFile : golRowsFromFile) {
 
             // TODO Number of cols should be less or equal compared to header x value
-            int[] liveCellsInCurrentRow = new int[result.sizeX];
+            int[] liveCellsInCurrentRow = new int[result.getSizeX()];
 
             char[] golRowFromFileCharArray = golRowFromFile.toCharArray();
             int colIndex = 0;
-            String currentNumberStr = "";
+            int runLength = 0;
 
             for (char c : golRowFromFileCharArray) {
                 // Accumulate digits
                 if (Character.isDigit(c)) {
-                    currentNumberStr += Character.toString(c);
+                    runLength = 10 * runLength + (c - '0');
                 }
-                // If we're done with digits, we're on 'c' (dead) or 'o' (live) cells
+                // If we're done with digits, we're on 'b' (dead) or 'o' (live) cells
                 else if (c == 'o' || c == 'b') {
                     // Parse accumulated number so we know how much there is in a row
-                    int numberOfSameCells = currentNumberStr.isEmpty() ? 1 : Integer.parseInt(currentNumberStr);
+                    runLength = (runLength == 0) ? 1 : runLength;
                     // If they're live cells, set value to 1 (everything is at 0 when array is initialized)
                     if (c == 'o') {
-                        for (int i = colIndex; i < colIndex + numberOfSameCells; i++) {
+                        for (int i = colIndex; i < colIndex + runLength; i++) {
                             liveCellsInCurrentRow[i] = 1;
                         }
                     }
                     // Increment column index so we know where start of next 'block' is, and reset accumulated Str
-                    colIndex += numberOfSameCells;
-                    currentNumberStr = "";
+                    colIndex += runLength;
+                    runLength = 0;
                 } else {
                     throw new IllegalStateException("Unexpected character '" + c + "' in data row (expecting digit or 'o' or 'b')");
                 }
@@ -134,7 +164,7 @@ public class GolFileParserRle {
             liveCells.add(liveCellsInCurrentRow);
         }
 
-        result.liveCells = liveCells;
+        result.setLiveCells(liveCells);
 
         return result;
 
@@ -157,26 +187,26 @@ public class GolFileParserRle {
         String lineChar = line.substring(1,2);
         String lineContent = line.substring(2).trim();
         switch (lineChar) {
-            case "C", "c" -> this.result.comments.add(lineContent);
+            case "C", "c" -> this.result.getComments().add(lineContent);
             case "N" -> {
-                if (this.result.name == null) {
-                    this.result.name = lineContent;
+                if (this.result.getName() == null) {
+                    this.result.setName(lineContent);
                 } else {
-                    this.result.name += "\r\n" + lineContent;
+                    this.result.setName(this.result.getName() + "\r\n" + lineContent);
                 }
             }
             case "O" -> {
-                if (this.result.createdBy == null) {
-                    this.result.createdBy = lineContent;
+                if (this.result.getCreatedBy() == null) {
+                    this.result.setCreatedBy(lineContent);
                 } else {
-                    this.result.createdBy += "\r\n" + lineContent;
+                    this.result.setCreatedBy(this.result.getCreatedBy() + "\r\n" + lineContent);
                 }
             }
             case "P" -> throw new IllegalStateException();
             case "R" -> throw new IllegalStateException();
             case "r" -> {
                 String[] lineContentSplit = lineContent.split("/");
-                this.result.rule = String.format("B%s/S%s", lineContentSplit[1], lineContentSplit[2]);
+                this.result.setRule(String.format("B%s/S%s", lineContentSplit[1], lineContentSplit[2]));
             }
         }
     }
@@ -186,38 +216,26 @@ public class GolFileParserRle {
      * x and y are required, rule is optional, if omitted, default Conway's rule is set
      */
     private void parseHeaderLine(String line) {
+
         String[] headerLineSplit = line.split(",");
-        this.result.sizeX = Integer.parseInt(headerLineSplit[0].split("=")[1]);
-        this.result.sizeY = Integer.parseInt(headerLineSplit[1].split("=")[1]);
+        this.result.setSizeX(Integer.parseInt(headerLineSplit[0].split("=")[1]));
+        this.result.setSizeY(Integer.parseInt(headerLineSplit[1].split("=")[1]));
 
         // Header can be also set with hashtag line r e.g. '#r 23/3' for Conway's rules
         // If rule is in this header line, set it; if not, and rule is not in '#r' line, set default Conway's
         if (headerLineSplit.length == 3) {
-            if (this.result.rule != null) {
+            if (this.result.getRule() != null) {
                 log.debug("I'm overwriting already set rule, because there is a rule in RLE header line");
             }
-            this.result.rule = headerLineSplit[2];
+            this.result.setRule(headerLineSplit[2]);
         } else {
-            if (this.result.rule == null) {
-                this.result.rule = "B3/S23"; // Set default Conway's rules
+            if (this.result.getRule() == null) {
+                this.result.setRule("B3/S23"); // Set default Conway's rules
             } else {
                 log.debug("I'm ignoring setting default Conway's rule B3/S23 because some rule is already set");
             }
         }
 
-
-
     }
 
-    @Data
-    public static class GolFileParserResult {
-        private int sizeX, sizeY;
-        private boolean startRelative;
-        private int startX, startY;
-        private String rule;
-        private List<int[]> liveCells;
-        private List<String> comments = new ArrayList<>();
-        private String name;
-        private String createdBy;
-    }
 }

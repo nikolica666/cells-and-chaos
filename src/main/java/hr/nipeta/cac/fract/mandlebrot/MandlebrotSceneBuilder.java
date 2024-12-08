@@ -31,6 +31,7 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
 
     // Interesting point -0.15985113725373606 + 1.0465216943636952i step 1.1368683772161603E-15 stepsX=1500 stepsY=1000
     // Interesting point -0.87 + 0.27i
+    // Interesting point -0.5555 + 0.636i
 
     private int canvasPixelsX = 1500;
     private int canvasPixelsY = 1000;

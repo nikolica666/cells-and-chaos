@@ -5,7 +5,7 @@ import hr.nipeta.cac.gol.model.GolCell;
 /**
  *  Diamoeba (B35678/S5678)
  */
-public class GolDiamoebaRules implements GolRules {
+public class GolDiamoebaRules extends GolRules {
 
     public boolean becomeAlive(GolCell[] neighbours) {
         return becomeAlive(countLiveNeighbours(neighbours, 5));
@@ -28,6 +28,11 @@ public class GolDiamoebaRules implements GolRules {
     @Override
     public String getPatternNotation() {
         return "B35678/S5678";
+    }
+
+    @Override
+    public String getName() {
+        return "Diamoeba";
     }
 
 }

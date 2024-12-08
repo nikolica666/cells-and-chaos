@@ -5,7 +5,7 @@ import hr.nipeta.cac.gol.model.GolCell;
 /**
  * Morley (B368/S245)
  */
-public class GolMorleyRules implements GolRules {
+public class GolMorleyRules extends GolRules {
 
     @Override
     public boolean becomeAlive(GolCell[] neighbours) {
@@ -32,6 +32,11 @@ public class GolMorleyRules implements GolRules {
     @Override
     public String getPatternNotation() {
         return "B368/S245";
+    }
+
+    @Override
+    public String getName() {
+        return "Morley";
     }
 
 }

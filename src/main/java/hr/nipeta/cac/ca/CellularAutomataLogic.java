@@ -27,20 +27,30 @@ public class CellularAutomataLogic {
         cells = new boolean[NUMBER_OF_ROWS][NUMBER_OF_COLUMNS];
     }
 
-    public void init(int rule) {
+    /**
+     * @param rule Cellular automata rule
+     * @param calculateFirstRowOnly if <b>true</b> only first row is calculated, and is set at cells[NUMBER_OF_ROWS - 1]
+     *                              if <b>false</b> all rows (NUMBER_OF_ROWS) are calculated and first row is cells[0]
+     */
+    public void init(int rule, boolean calculateFirstRowOnly) {
 
         this.rule = rule;
         ruleAsBinaryString = String.format("%8s", Integer.toBinaryString(rule)).replace(' ', '0');
 
         log.debug("Init rule {} ({})", ruleAsBinaryString, rule);
-long milli = System.currentTimeMillis();
-        cells[0] = initRow0();
+        long milli = System.currentTimeMillis();
 
-        for (int rowIndex = 1; rowIndex < NUMBER_OF_ROWS; rowIndex++) {
-            boolean[] previousRow = cells[rowIndex - 1];
-            cells[rowIndex] = calculateRow(previousRow);
+        if (calculateFirstRowOnly) {
+            cells[NUMBER_OF_ROWS - 1] = initRow0();
+        } else {
+            cells[0] = initRow0();
+            for (int rowIndex = 1; rowIndex < NUMBER_OF_ROWS; rowIndex++) {
+                boolean[] previousRow = cells[rowIndex - 1];
+                cells[rowIndex] = calculateRow(previousRow);
+            }
         }
-log.debug("Evolved in {}ms", (System.currentTimeMillis()-milli));
+
+        log.debug("Evolved in {}ms", (System.currentTimeMillis()-milli));
     }
 
     private boolean[] initRow0() {
@@ -50,7 +60,6 @@ log.debug("Evolved in {}ms", (System.currentTimeMillis()-milli));
     }
 
     /***
-     *
      * TODO this can be optimised with<br/>
      * {@code
      * int neighborhood =
@@ -72,7 +81,8 @@ log.debug("Evolved in {}ms", (System.currentTimeMillis()-milli));
 
         row[0] = ruleAsBinaryString.charAt(stateFirst.ordinal()) == '1';
 
-        for (int columnIndex = 1 ; columnIndex < NUMBER_OF_COLUMNS - 1; columnIndex++) {
+        IntStream.range(1, NUMBER_OF_COLUMNS - 1).parallel().forEach(columnIndex -> {
+//        for (int columnIndex = 1 ; columnIndex < NUMBER_OF_COLUMNS - 1; columnIndex++) {
 
             CellularAutomataState state = CellularAutomataState.of(
                     previousRow[columnIndex - 1],
@@ -82,8 +92,8 @@ log.debug("Evolved in {}ms", (System.currentTimeMillis()-milli));
 
             row[columnIndex] = ruleAsBinaryString.charAt(state.ordinal()) == '1';
 
-        }
-
+//        }
+        });
         CellularAutomataState stateLast = CellularAutomataState.of(
                 previousRow[NUMBER_OF_COLUMNS - 2],
                 previousRow[NUMBER_OF_COLUMNS - 1],

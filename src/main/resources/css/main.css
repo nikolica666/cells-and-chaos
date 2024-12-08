@@ -7,3 +7,7 @@ HBox {
 .bg-dark {
     -fx-background-color: #232323;
 }
+
+.dialog-pane {
+    -fx-font-size: 16px;
+}

@@ -5,7 +5,7 @@ import hr.nipeta.cac.gol.model.GolCell;
 /**
  *  Rule B3/S23 - 'Conway's game of life' (the classical one)
  **/
-public class GolConwayRules implements GolRules {
+public class GolConwayRules extends GolRules {
 
     public boolean becomeAlive(GolCell[] neighbours) {
         return becomeAlive(countLiveNeighbours(neighbours, 3));
@@ -28,6 +28,11 @@ public class GolConwayRules implements GolRules {
     @Override
     public String getPatternNotation() {
         return "B3/S23";
+    }
+
+    @Override
+    public String getName() {
+        return "Conway";
     }
 
 }

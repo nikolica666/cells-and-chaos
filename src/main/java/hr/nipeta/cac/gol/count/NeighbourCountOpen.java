@@ -5,13 +5,14 @@ import hr.nipeta.cac.model.IntCoordinates;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class NeighbourCountOpen implements NeighbourCount {
 
     @Override
-    public Map<IntCoordinates, Integer> count(Collection<IntCoordinates> liveCells, int GRID_SIZE_X, int GRID_SIZE_Y) {
+    public ConcurrentHashMap<IntCoordinates, Integer> count(Collection<IntCoordinates> liveCells, int GRID_SIZE_X, int GRID_SIZE_Y) {
 
-        Map<IntCoordinates, Integer> neighborCounts = new HashMap<>();
+        ConcurrentHashMap<IntCoordinates, Integer> neighborCounts = new ConcurrentHashMap<>();
 
         // Count live neighbors for all live cells and their neighbors
         for (IntCoordinates cell : liveCells) {

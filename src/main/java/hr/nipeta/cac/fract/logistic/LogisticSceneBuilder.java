@@ -10,8 +10,6 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -45,8 +43,7 @@ public class LogisticSceneBuilder extends SceneBuilder {
     @Override
     public Scene createContent() {
 
-        timerControl = new PeriodicAnimationTimerGuiControl(
-                PeriodicAnimationTimer.every(3).execute(this::evolveAndDraw));
+        timerControl = PeriodicAnimationTimerGuiControl.of(PeriodicAnimationTimer.every(3).execute(this::evolveAndDraw));
 
         Region parent = new VBox(10, mainMenu(), caGridWrapped());
         parent.setPadding(new Insets(10));
@@ -81,16 +78,16 @@ public class LogisticSceneBuilder extends SceneBuilder {
 
     }
 
-    private double minXAxis = 1.5;
+    private double minXAxis = 3.2;
     private double currentXAxis = minXAxis;
-    private double stepXAxis = 0.00125;
+    private double stepXAxis = 0.000125;
     private double startingPopulation = 0.5;
-    private double maxXAxis = 4;
+    private double maxXAxis = 4.1;
 
     private double numberOfPoints = (maxXAxis - minXAxis) / stepXAxis;
 
     private int paddingX = 50;
-    private int paddingY = 200;
+    private int paddingY = 100;
 
     private double pixelsPerPoint = (GRID_SIZE_X - paddingX) / numberOfPoints;
 
@@ -122,7 +119,7 @@ public class LogisticSceneBuilder extends SceneBuilder {
         for (double yAxisPoint : yAxisPoints) {log.debug("current point is {}, pixels per point={}",currentPoint(), pixelsPerPoint);
             gc.fillOval(
                     paddingX + pixelsPerPoint * currentPoint(),
-                    paddingY + yAxisPoint * 500,
+                    paddingY + yAxisPoint * 700,
                     2,2);
         }
 
