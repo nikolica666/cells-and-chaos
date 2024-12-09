@@ -8,6 +8,7 @@ import hr.nipeta.cac.gol.file.parser.GolFileParserFactory;
 import hr.nipeta.cac.gol.file.parser.GolFileParserResult;
 import hr.nipeta.cac.gol.model.GolCellState;
 import hr.nipeta.cac.gol.rules.*;
+import hr.nipeta.cac.model.Coordinates;
 import hr.nipeta.cac.model.IntCoordinates;
 import hr.nipeta.cac.model.RectangularGrid;
 import hr.nipeta.cac.model.gui.PercentLabelGuiControl;
@@ -35,7 +36,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static hr.nipeta.cac.model.gui.SceneUtils.*;
 import static java.lang.System.currentTimeMillis;
@@ -43,7 +46,14 @@ import static java.lang.System.currentTimeMillis;
 @Slf4j
 public class GolSceneBuilder extends SceneBuilder {
 
+    private static final Map<GolCellState, Color> DEFAULT_COLORS = Map.of(
+            GolCellState.DEAD, Color.WHEAT,
+            GolCellState.ALIVE, Color.DARKGREEN);
+
+    private Map<GolCellState, Color> colors = new HashMap<>(DEFAULT_COLORS);
+
     private RectangularGrid rectangularGrid;
+
     private PeriodicAnimationTimerGuiControl timerControl;
 
     private GolLogic logic;
@@ -55,8 +65,10 @@ public class GolSceneBuilder extends SceneBuilder {
     private double scaleFactor = 1.0;
 
     private TextField cellSizeInput;
-    private PercentLabelGuiControl livePercentLabel;
+    private ColorPicker liveColorPicker;
+    private ColorPicker deadColorPicker;
 
+    private PercentLabelGuiControl livePercentLabel;
 
     public GolSceneBuilder(Main main) {
         super(main);
@@ -69,8 +81,6 @@ public class GolSceneBuilder extends SceneBuilder {
         logic = new GolLogic(rectangularGrid.getCols(), rectangularGrid.getRows(), new GolConwayRules(), new NeighbourCountWrap());
 
         timerControl = PeriodicAnimationTimerGuiControl.of(PeriodicAnimationTimer.every(125).execute(this::evolveAndDrawGrid));
-
-        cellSizeInput = createInput("" + rectangularGrid.getCellSize(), 150, createTooltip("Cell size"), this::onCellSizeInputSubmit);
 
         livePercentLabel = PercentLabelGuiControl.of("Alive ");
 
@@ -164,7 +174,7 @@ public class GolSceneBuilder extends SceneBuilder {
                     for (int colIndex = 0; colIndex < row.length; colIndex++) {
                         if (row[colIndex] == 1) {
                             GolCellState newState = logic.toggle(startY + rowIndex, startX + colIndex);
-                            drawCell(canvas.getGraphicsContext2D(), startY + rowIndex, startX + colIndex, setFillBasedOnCellState(newState));
+                            drawCell(canvas.getGraphicsContext2D(), startY + rowIndex, startX + colIndex, colors.get(newState));
                         }
                     }
                 }
@@ -183,6 +193,68 @@ public class GolSceneBuilder extends SceneBuilder {
         layout.setStyle("-fx-padding: 20; -fx-alignment: center;");
 
         return layout;
+
+    }
+
+    private Node displayPopup() {
+
+        Button showPopupButton = new Button("Display");
+
+        Popup popup = new Popup();
+        popup.setAutoHide(true);
+
+        VBox popupContent = new VBox(10);
+        popupContent.setPadding(new Insets(10));
+        popupContent.setStyle("-fx-background-color: #ffffff; -fx-border-color: #cccccc; -fx-border-radius: 5px; -fx-background-radius: 5px;");
+
+        cellSizeInput = createInput("" + rectangularGrid.getCellSize(), 150, createTooltip("Cell size"), this::onCellSizeInputSubmit);
+
+        liveColorPicker = new ColorPicker(colors.get(GolCellState.ALIVE));
+        liveColorPicker.setOnAction(event -> {
+            colors.put(GolCellState.ALIVE, liveColorPicker.getValue());
+            drawGridLiveCells(canvas.getGraphicsContext2D());
+        });
+        deadColorPicker = new ColorPicker(colors.get(GolCellState.DEAD));
+        deadColorPicker.setOnAction(event -> {
+            colors.put(GolCellState.DEAD, deadColorPicker.getValue());
+            drawGridDeadAndEmptyCells(canvas.getGraphicsContext2D());
+        });
+
+        Button defaultColorsButton = createButton("Default colors", e -> {
+            colors = new HashMap<>(DEFAULT_COLORS);
+            drawGridLiveCells(canvas.getGraphicsContext2D());
+            drawGridDeadAndEmptyCells(canvas.getGraphicsContext2D());
+        });
+
+        popupContent.getChildren().addAll(cellSizeInput, liveColorPicker, deadColorPicker, defaultColorsButton);
+        popupContent.setAlignment(Pos.CENTER);
+
+        // Add content to the Popup
+        popup.getContent().add(popupContent);
+
+        showPopupButton.setOnAction(e -> popup.show(main.getPrimaryStage()));
+
+        return showPopupButton;
+
+    }
+
+    private void onCellSizeInputSubmit() {
+
+        Double newCellSize = parseCellSizeInput(cellSizeInput.getText());
+
+        if (newCellSize == null) {
+            return;
+        }
+
+        if (newCellSize.compareTo(rectangularGrid.getCellSize()) == 0) {
+            return;
+        }
+
+        timerControl.stopToExecuteThenRestart(() -> {
+            rectangularGrid.setCellSize(newCellSize);
+            cellSizeInput.setPromptText("" + newCellSize);
+            resizeAndRedrawCanvas();
+        });
 
     }
 
@@ -235,30 +307,10 @@ public class GolSceneBuilder extends SceneBuilder {
                 timerControl.getDurationInput(),
                 rulesSelector(),
                 neighbourCountSelector(),
-                cellSizeInput,
                 patternsPopup(),
+                displayPopup(),
                 welcomeScreenButton()
         );
-    }
-
-    private void onCellSizeInputSubmit() {
-
-        Double newCellSize = parseCellSizeInput(cellSizeInput.getText());
-
-        if (newCellSize == null) {
-            return;
-        }
-
-        if (newCellSize.compareTo(rectangularGrid.getCellSize()) == 0) {
-            return;
-        }
-
-        timerControl.stopToExecuteThenRestart(() -> {
-            rectangularGrid.setCellSize(newCellSize);
-            cellSizeInput.setPromptText("" + newCellSize);
-            resizeAndRedrawCanvas();
-        });
-
     }
 
     private void resizeAndRedrawCanvas() {
@@ -453,7 +505,7 @@ public class GolSceneBuilder extends SceneBuilder {
         // We set "next enum" when mouse is dragged on screen
         GolCellState newState = logic.toggle(row, col);
 
-        drawCell(gc, row, col, setFillBasedOnCellState(newState));
+        drawCell(gc, row, col, colors.get(newState));
 
         livePercentLabel.set((double) logic.getLiveCells().size() / rectangularGrid.getNumberOfCells());
 
@@ -471,6 +523,16 @@ public class GolSceneBuilder extends SceneBuilder {
 
     }
 
+    private void drawEmptyCell(GraphicsContext gc, int row, int col) {
+
+        double x = col * rectangularGrid.getCellSizeWithBorder();
+        double y = row * rectangularGrid.getCellSizeWithBorder();
+
+        gc.setFill(colors.get(GolCellState.DEAD));
+        gc.fillRect(x, y, rectangularGrid.getCellSize(), rectangularGrid.getCellSize());
+
+    }
+
     private void drawGrid(GraphicsContext gc) {
 
         long milli = currentTimeMillis();
@@ -479,18 +541,36 @@ public class GolSceneBuilder extends SceneBuilder {
 
         int counter = 0;
 
-        // Needs refactoring
         for (IntCoordinates cell : logic.getLiveCells()) {
             counter++;
-            drawCell(gc, cell, setFillBasedOnCellState(GolCellState.ALIVE));
+            drawCell(gc, cell, colors.get(GolCellState.ALIVE));
         }
         for (IntCoordinates cell : logic.getDeadCells()) {
             counter++;
-            drawCell(gc, cell, setFillBasedOnCellState(GolCellState.DEAD));
+            drawCell(gc, cell, colors.get(GolCellState.DEAD));
         }
 
         log.debug("I drew {} of {} cells in {}ms", counter, rectangularGrid.getNumberOfCells(), (currentTimeMillis() - milli));
 
+    }
+
+    private void drawGridLiveCells(GraphicsContext gc) {
+        for (IntCoordinates cell : logic.getLiveCells()) {
+            drawCell(gc, cell, colors.get(GolCellState.ALIVE));
+        }
+    }
+
+    private void drawGridDeadAndEmptyCells(GraphicsContext gc) {
+        for (int row = 0; row < rectangularGrid.getRows(); row++) {
+            for (int col = 0; col < rectangularGrid.getCols(); col++) {
+                if (!logic.getLiveCells().contains(IntCoordinates.of(col, row))) {
+                    drawEmptyCell(gc, row, col);
+                }
+            }
+        }
+        for (IntCoordinates cell : logic.getDeadCells()) {
+            drawCell(gc, cell, colors.get(GolCellState.DEAD));
+        }
     }
 
     private void drawCell(GraphicsContext gc, IntCoordinates cell, Paint paint) {
@@ -507,28 +587,6 @@ public class GolSceneBuilder extends SceneBuilder {
         gc.setFill(paint);
         gc.fillRect(x, y, rectangularGrid.getCellSize(), rectangularGrid.getCellSize());
 
-    }
-
-    private void drawEmptyCell(GraphicsContext gc, int row, int col) {
-
-        double x = col * rectangularGrid.getCellSizeWithBorder();
-        double y = row * rectangularGrid.getCellSizeWithBorder();
-
-        gc.setFill(setFillBasedOnCellState(GolCellState.DEAD));
-        gc.fillRect(x, y, rectangularGrid.getCellSize(), rectangularGrid.getCellSize());
-
-    }
-
-    private Paint setFillBasedOnCellState(GolCellState state) {
-        switch (state) {
-            case ALIVE -> {
-                return Color.DARKGREEN;
-            }
-            case DEAD -> {
-                return Color.WHEAT;
-            }
-            default -> throw new RuntimeException("Cannot set fill color for unexpected state " + state);
-        }
     }
 
 }
