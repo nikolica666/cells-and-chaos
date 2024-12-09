@@ -77,7 +77,19 @@ public class GolSceneBuilder extends SceneBuilder {
     @Override
     public Scene createContent() {
 
-        rectangularGrid = RectangularGrid.of(64,128,12,1);
+        // Get the primary screen
+        javafx.stage.Screen screen = javafx.stage.Screen.getPrimary();
+
+        // Get the visual bounds (usable screen area, excluding taskbar, etc.)
+        javafx.geometry.Rectangle2D visualBounds = screen.getVisualBounds();
+
+        double cellSize = 10;
+
+        rectangularGrid = RectangularGrid.of(
+                (int) ((visualBounds.getHeight() - 400) / cellSize),
+                (int) ((visualBounds.getWidth() - 300) / cellSize),
+                cellSize,
+                1);
         logic = new GolLogic(rectangularGrid.getCols(), rectangularGrid.getRows(), new GolConwayRules(), new NeighbourCountWrap());
 
         timerControl = PeriodicAnimationTimerGuiControl.of(PeriodicAnimationTimer.every(125).execute(this::evolveAndDrawGrid));
@@ -302,7 +314,7 @@ public class GolSceneBuilder extends SceneBuilder {
                 timerControl.getStartButton(),
                 timerControl.getStopButton(),
                 stepButton(),
-                randomizeButton(),
+                randomizeInput(),
                 clearButton(),
                 timerControl.getDurationInput(),
                 rulesSelector(),
@@ -360,16 +372,30 @@ public class GolSceneBuilder extends SceneBuilder {
 
     }
 
-    private Button randomizeButton() {
-        return createButton("Randomize", event -> {
-
-            logic.randomize();
-
-            drawGrid(canvas.getGraphicsContext2D());
-
-            livePercentLabel.set((double) logic.getLiveCells().size() / rectangularGrid.getNumberOfCells());
-
+    private Node randomizeInput() {
+        return createInput("Randomize", 150, createTooltip("Type in percentage of live cells (just a number) then press Enter"), (input) -> {
+            Double percentAlive = parseRandomizeInput(input.getText());
+            if (percentAlive != null) {
+                logic.randomize(percentAlive);
+                drawGrid(canvas.getGraphicsContext2D());
+                livePercentLabel.set((double) logic.getLiveCells().size() / rectangularGrid.getNumberOfCells());
+            }
         });
+    }
+
+    private Double parseRandomizeInput(String input) {
+        try {
+            double doubleInput = Double.parseDouble(input) / 100;
+            if (doubleInput < 0 || doubleInput > 1) {
+                showAlertError("Percent must be between 0 and 100.");
+                return null;
+            } else {
+                return doubleInput;
+            }
+        } catch (NumberFormatException ex) {
+            showAlertError("Invalid number. Please enter a valid number.");
+            return null;
+        }
     }
 
     private ComboBox<String> rulesSelector() {

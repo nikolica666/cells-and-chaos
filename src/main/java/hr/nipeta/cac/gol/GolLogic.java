@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.IntStream;
 
 @Slf4j
 public class GolLogic {
@@ -40,16 +39,19 @@ public class GolLogic {
         this.deadCells = new HashSet<>();
     }
 
-    public void randomize() {
+    public void randomize(double percentAlive) {
+
         long mili = System.currentTimeMillis();
         this.liveCells = new HashSet<>();
         this.deadCells = new HashSet<>();
+
+        Random random = new Random();
 
         for (int row = 0; row < GRID_SIZE_Y; row++) {
             for (int col = 0; col < GRID_SIZE_X; col++) {
                 IntCoordinates coordinates = IntCoordinates.of(col, row);
                 // TODO this will not work OK if we introduce more then 2 states
-                if (new Random().nextBoolean()) {
+                if (random.nextDouble() < percentAlive) {
                     liveCells.add(coordinates);
                 } else {
                     deadCells.add(coordinates);

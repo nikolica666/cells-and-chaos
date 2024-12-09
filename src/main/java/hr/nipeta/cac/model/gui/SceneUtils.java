@@ -6,6 +6,8 @@ import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.util.Duration;
 
+import java.util.function.Consumer;
+
 public class SceneUtils {
 
     /**
@@ -37,6 +39,18 @@ public class SceneUtils {
             if (event.getCode() == KeyCode.ENTER) {
                 if (!input.getText().isEmpty()) {
                     onEnterPressed.run();
+                }
+            }
+        });
+        return input;
+    }
+
+    public static TextField createInput(Object prompt, double prefWidth, Tooltip tooltip, Consumer<TextField> onEnterPressed) {
+        TextField input = createInput(prompt, prefWidth, tooltip);
+        input.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                if (!input.getText().isEmpty()) {
+                    onEnterPressed.accept(input);
                 }
             }
         });
