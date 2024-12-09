@@ -24,11 +24,11 @@ import static hr.nipeta.cac.model.gui.SceneUtils.*;
 public class LSystemSceneBuilder extends SceneBuilder {
 
     private static List<LSystemRules> interestingRules = Arrays.asList(
-            new LSystemRules(Map.of('0', "1[0]0",'1', "11"),"0", 8),
-            new LSystemRules(Map.of('F', "F+F−F−F+F"),"F", 8),
-            new LSystemRules(Map.of('F', "F−G+F+G−F", 'G', "GG"),"F−G−G", 8),
-            new LSystemRules(Map.of('F', "F+G", 'G', "F-G"),"F", 8),
-            new LSystemRules(Map.of('X', "F+[[X]-X]-F[-FX]+X", 'F', "FF"),"X", 8));
+            new LSystemRules(Map.of('0', "1[0]0",'1', "11"),"0"),
+            new LSystemRules(Map.of('F', "F+F−F−F+F"),"F"),
+            new LSystemRules(Map.of('F', "F−G+F+G−F", 'G', "GG"),"F−G−G"),
+            new LSystemRules(Map.of('F', "F+G", 'G', "F-G"),"F"),
+            new LSystemRules(Map.of('X', "F+[[X]-X]-F[-FX]+X", 'F', "FF"),"X"));
 
     private static final int GRID_SIZE_X = 128;
     private static final int GRID_SIZE_Y = 64;
@@ -114,7 +114,8 @@ public class LSystemSceneBuilder extends SceneBuilder {
         this.rule = varWithRuleMap;
 
         if (axiom != null) {
-            new LSystemRules(varWithRuleMap, axiom, 8);
+            LSystemRules lSystemRules = new LSystemRules(varWithRuleMap, axiom);
+            lSystemRules.evolve(8);
             drawGrid(gc);
         }
 

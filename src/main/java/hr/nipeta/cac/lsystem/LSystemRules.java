@@ -1,6 +1,7 @@
 package hr.nipeta.cac.lsystem;
 
 import hr.nipeta.cac.model.ComplexNumber;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -9,11 +10,19 @@ import java.util.Random;
 @Slf4j
 public class LSystemRules {
 
-    public LSystemRules(Map<Character,String> variablesAndRules, String axiom, int steps) {
-        evolve(variablesAndRules, axiom, steps);
+    private Map<Character, String> variablesAndRules;
+    private String axiom;
+
+    public LSystemRules(Map<Character, String> variablesAndRules, String axiom) {
+        this.variablesAndRules = variablesAndRules;
+        this.axiom = axiom;
     }
 
-    public String evolve(Map<Character,String> variablesAndRules, String currentState, int steps) {
+    public String evolve(int steps) {
+        return evolve(variablesAndRules, axiom, steps);
+    }
+
+    private String evolve(Map<Character,String> variablesAndRules, String currentState, int steps) {
 
         log.debug("Current state = {}", currentState);
 
