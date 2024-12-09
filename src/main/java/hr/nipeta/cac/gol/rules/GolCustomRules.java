@@ -72,7 +72,6 @@ public class GolCustomRules extends GolRules {
         this.toBecomeAlive = toBecomeAlive;
         this.toStayAlive = toStayAlive;
         this.patternNotation = "B" + joinNumbers(toBecomeAlive) + "/" + "S" + joinNumbers(toStayAlive);
-        System.out.println("custom pattern " + patternNotation);
     }
 
     private String joinNumbers(Collection<Integer> numbers) {
