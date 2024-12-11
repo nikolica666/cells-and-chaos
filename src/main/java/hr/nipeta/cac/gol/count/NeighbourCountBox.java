@@ -3,8 +3,6 @@ package hr.nipeta.cac.gol.count;
 import hr.nipeta.cac.model.IntCoordinates;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class NeighbourCountBox implements NeighbourCount {
@@ -12,11 +10,9 @@ public class NeighbourCountBox implements NeighbourCount {
     @Override
     public ConcurrentHashMap<IntCoordinates, Integer> count(Collection<IntCoordinates> liveCells, int GRID_SIZE_X, int GRID_SIZE_Y) {
 
-//        Map<IntCoordinates, Integer> neighborCounts = new HashMap<>();
         ConcurrentHashMap<IntCoordinates, Integer> neighborCounts = new ConcurrentHashMap<>();
 
         // Count live neighbors for all live cells and their neighbors
-//        for (IntCoordinates cell : liveCells) {
         liveCells.parallelStream().forEach(cell -> {
             for (int dx = -1; dx <= 1; dx++) {
                 int neighbourX = cell.getX() + dx;
@@ -33,13 +29,11 @@ public class NeighbourCountBox implements NeighbourCount {
                     }
 
                     IntCoordinates neighbor = IntCoordinates.of(neighbourX, neighbourY);
-//                    neighborCounts.put(neighbor, neighborCounts.getOrDefault(neighbor, 0) + 1);
                     neighborCounts.compute(neighbor, (key, value) -> (value == null) ? 1 : value + 1);
 
                 }
             }
         });
-//        }
 
         return neighborCounts;
 

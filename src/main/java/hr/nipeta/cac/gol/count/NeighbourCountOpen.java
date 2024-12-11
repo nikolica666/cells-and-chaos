@@ -15,7 +15,7 @@ public class NeighbourCountOpen implements NeighbourCount {
         ConcurrentHashMap<IntCoordinates, Integer> neighborCounts = new ConcurrentHashMap<>();
 
         // Count live neighbors for all live cells and their neighbors
-        for (IntCoordinates cell : liveCells) {
+        liveCells.parallelStream().forEach(cell -> {
             for (int dx = -1; dx <= 1; dx++) {
                 int neighbourX = cell.getX() + dx;
                 for (int dy = -1; dy <= 1; dy++) {
@@ -24,10 +24,10 @@ public class NeighbourCountOpen implements NeighbourCount {
                     }
                     int neighbourY = cell.getY() + dy;
                     IntCoordinates neighbor = IntCoordinates.of(neighbourX, neighbourY);
-                    neighborCounts.put(neighbor, neighborCounts.getOrDefault(neighbor, 0) + 1);
+                    neighborCounts.compute(neighbor, (key, value) -> (value == null) ? 1 : value + 1);
                 }
             }
-        }
+        });
 
         return neighborCounts;
 

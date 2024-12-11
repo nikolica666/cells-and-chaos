@@ -23,13 +23,17 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.scene.transform.Scale;
 import javafx.stage.FileChooser;
 import javafx.stage.Popup;
 import lombok.extern.slf4j.Slf4j;
@@ -83,7 +87,7 @@ public class GolSceneBuilder extends SceneBuilder {
         // Get the visual bounds (usable screen area, excluding taskbar, etc.)
         javafx.geometry.Rectangle2D visualBounds = screen.getVisualBounds();
 
-        double cellSize = 10;
+        double cellSize = 1;
 
         rectangularGrid = RectangularGrid.of(
                 (int) ((visualBounds.getHeight() - 400) / cellSize),
@@ -377,7 +381,8 @@ public class GolSceneBuilder extends SceneBuilder {
             Double percentAlive = parseRandomizeInput(input.getText());
             if (percentAlive != null) {
                 logic.randomize(percentAlive);
-                drawGrid(canvas.getGraphicsContext2D());
+                drawEmptyGrid(canvas.getGraphicsContext2D());
+                drawGridLiveCells(canvas.getGraphicsContext2D());
                 livePercentLabel.set((double) logic.getLiveCells().size() / rectangularGrid.getNumberOfCells());
             }
         });
@@ -466,24 +471,45 @@ public class GolSceneBuilder extends SceneBuilder {
 
         initCanvasGrid(canvasWidth, canvasHeight);
 
-        Pane canvasContainer = new Pane(canvas);
-/*
+        StackPane canvasContainer = new StackPane(canvas);
+
         // Add zoom functionality
-        canvasContainer.setOnScroll((ScrollEvent event) -> {
+        canvas.setOnScroll((ScrollEvent event) -> {
+            log.debug("ScrollEvent {}", event);
+
+            if (event.getDeltaY() == 0) {
+                log.debug("Ignoring ScrollEvent because deltaY is zero");
+                return;
+            }
+
             double zoomFactor = 1.1; // Define zoom speed
             if (event.getDeltaY() < 0) {
                 zoomFactor = 1 / zoomFactor; // Zoom out
             }
             double newScaleFactor = scaleFactor * zoomFactor;
+            log.debug("newScaleFactor={}, scaleFactor={}", newScaleFactor, scaleFactor);
             if (newScaleFactor >= 0.5 && newScaleFactor <= 5.0) { // Limits: 50% to 500%
                 scaleFactor = newScaleFactor;
-                canvasContainer.getTransforms().clear(); // Clear previous transforms
+
+                canvas.getTransforms().clear(); // Clear previous transforms
                 Scale scale = new Scale(scaleFactor, scaleFactor, event.getX(), event.getY());
-                canvasContainer.getTransforms().add(scale);
+                canvas.getTransforms().add(scale);
+                
             }
 
+            event.consume();
+
         });
-*/
+
+        canvas.setClip(new Rectangle(canvas.getWidth(), canvas.getHeight()));
+        canvas.widthProperty().addListener((obs, oldVal, newVal) -> {
+            canvas.setClip(new Rectangle(canvas.getWidth(), canvas.getHeight()));
+        });
+        canvas.heightProperty().addListener((obs, oldVal, newVal) -> {
+            canvas.setClip(new Rectangle(canvas.getWidth(), canvas.getHeight()));
+        });
+
+
         return canvasContainer;
 
     }

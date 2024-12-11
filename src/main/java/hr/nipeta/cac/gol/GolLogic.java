@@ -53,8 +53,6 @@ public class GolLogic {
                 // TODO this will not work OK if we introduce more then 2 states
                 if (random.nextDouble() < percentAlive) {
                     liveCells.add(coordinates);
-                } else {
-                    deadCells.add(coordinates);
                 }
             }
         }
@@ -153,10 +151,7 @@ public class GolLogic {
     }
 
     public void setAllDead() {
-
         this.liveCells = new HashSet<>();
         this.deadCells = new HashSet<>();
-
-
     }
 }
