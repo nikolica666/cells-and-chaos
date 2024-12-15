@@ -2,11 +2,8 @@ package hr.nipeta.cac.ca;
 
 import hr.nipeta.cac.Main;
 import hr.nipeta.cac.SceneBuilder;
-import hr.nipeta.cac.model.gui.CounterLabelGuiControl;
-import hr.nipeta.cac.model.gui.PercentLabelGuiControl;
 import hr.nipeta.cac.model.gui.PeriodicAnimationTimer;
 import hr.nipeta.cac.model.gui.PeriodicAnimationTimerGuiControl;
-import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -73,7 +70,7 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
                 timerControl.getDurationInput(),
                 ruleInput,
                 randomRuleButton(),
-                welcomeScreenButton()
+                createSceneChangePopupButton()
         );
     }
 
@@ -91,12 +88,6 @@ public class CellularAutomataSceneBuilder extends SceneBuilder {
 
     private Button randomRuleButton() {
         return createButton("Random rule", e -> setNewRandomRuleThenDrawGrid());
-    }
-
-    private Button welcomeScreenButton() {
-        return createButton(
-                "Main menu",
-                e -> createScene(() -> new WelcomeSceneBuilder(main)));
     }
 
     private void onRuleInputSubmit() {

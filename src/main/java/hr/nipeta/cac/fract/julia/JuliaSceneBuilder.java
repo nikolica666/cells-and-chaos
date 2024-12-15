@@ -6,7 +6,6 @@ import hr.nipeta.cac.fract.model.FractalResult;
 import hr.nipeta.cac.model.ComplexNumber;
 import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
 import javafx.geometry.Insets;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -74,16 +73,10 @@ public class JuliaSceneBuilder extends SceneBuilder {
 
         StackPane stackedCanvas = new StackPane(fractalCanvas, tooltipCanvas);
 
-        Region parent = new VBox(mainMenu(), stackedCanvas);
+        Region parent = new VBox(createSceneChangePopupButton(), stackedCanvas);
         parent.setPadding(new Insets(10));
         return new Scene(parent);
 
-    }
-
-    private Node mainMenu() {
-        return horizontalMenu(
-                welcomeScreenButton()
-        );
     }
 
     private Button welcomeScreenButton() {

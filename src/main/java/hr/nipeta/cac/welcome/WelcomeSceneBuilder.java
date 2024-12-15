@@ -16,6 +16,8 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 
 import static hr.nipeta.cac.model.gui.SceneUtils.createButton;
 
@@ -27,30 +29,7 @@ public class WelcomeSceneBuilder extends SceneBuilder {
 
     @Override
     public Scene createContent() {
-
-        HBox box = horizontalMenu(
-                createSceneChangeButton("Game of Life", new GolSceneBuilder(main)),
-                createSceneChangeButton("Cellular Automata", new CellularAutomataSceneBuilder(main)),
-                createSceneChangeButton("Langton's Ant", new LangtonAntSceneBuilder(main)),
-                createSceneChangeButton("Collatz conjecture",new CollatzSceneBuilder(main)),
-                createSceneChangeButton("M", new MandlebrotSceneBuilder(main)),
-                createSceneChangeButton("J", new JuliaSceneBuilder(main)),
-                createSceneChangeButton("L-System", new LSystemSceneBuilder(main)),
-                createSceneChangeButton("Logistic map", new LogisticSceneBuilder(main))
-        );
-
-        box.setPadding(new Insets(10));
-
-        return new Scene(box);
-
-    }
-
-    private Button createSceneChangeButton(String label, SceneBuilder sceneBuilder) {
-        return createButton(label, sceneEventHandler(sceneBuilder));
-    }
-
-    private EventHandler<ActionEvent> sceneEventHandler(SceneBuilder b) {
-        return (e) -> createScene(() -> b);
+        return new Scene(createSceneChangePane());
     }
 
 }

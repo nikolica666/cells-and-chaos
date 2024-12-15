@@ -6,13 +6,11 @@ import hr.nipeta.cac.collatz.rules.CollatzCell;
 import hr.nipeta.cac.model.Coordinates;
 import hr.nipeta.cac.model.gui.PeriodicAnimationTimer;
 import hr.nipeta.cac.model.gui.PeriodicAnimationTimerGuiControl;
-import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Button;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -26,8 +24,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static hr.nipeta.cac.model.gui.SceneUtils.createButton;
 
 @Slf4j
 public class CollatzSceneBuilder extends SceneBuilder {
@@ -66,7 +62,7 @@ public class CollatzSceneBuilder extends SceneBuilder {
                 timerControl.getStartButton(),
                 timerControl.getStopButton(),
                 timerControl.getDurationInput(),
-                welcomeScreenButton()
+                createSceneChangePopupButton()
         );
     }
 
@@ -174,12 +170,6 @@ public class CollatzSceneBuilder extends SceneBuilder {
                 baseColor.deriveColor(-30, 0.95, 0.95, 1),   // Shift toward blue-green, softer
                 baseColor.deriveColor(5, 1.05, 1.05, 1)
         );
-    }
-
-    private Button welcomeScreenButton() {
-        return createButton(
-                "Main menu",
-                e -> createScene(() -> new WelcomeSceneBuilder(main)));
     }
 
     @Data

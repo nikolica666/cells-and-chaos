@@ -2,13 +2,11 @@ package hr.nipeta.cac.lsystem;
 
 import hr.nipeta.cac.Main;
 import hr.nipeta.cac.SceneBuilder;
-import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
@@ -69,7 +67,7 @@ public class LSystemSceneBuilder extends SceneBuilder {
         return horizontalMenu(
                 ruleInput,
                 axiomInput,
-                welcomeScreenButton()
+                createSceneChangePopupButton()
         );
     }
 
@@ -125,12 +123,6 @@ public class LSystemSceneBuilder extends SceneBuilder {
         String input = axiomInput.getText();
         this.axiom = axiom;
         drawGrid(gc);
-    }
-
-    private Button welcomeScreenButton() {
-        return createButton(
-                "Main menu",
-                e -> createScene(() -> new WelcomeSceneBuilder(main)));
     }
 
     private Node caGridWrapped() {

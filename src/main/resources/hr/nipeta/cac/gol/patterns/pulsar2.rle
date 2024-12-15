@@ -1,0 +1,8 @@
+#N 112P51_synth
+#O Matthias Merzenich with Jason Summers and "Knightlife"
+#C catagolue.hatsya.com
+x = 28, y = 28, rule = B3/S23
+2b3o3b3o2$o4bobo4bo$o4bobo4bo$o4bobo4bo$2b3o3b3o2$2b3o3b3o$o4bobo4bo$o4bobo4b
+o$o4bobo4bo2$2b3o3b3o3$9b2o6b3o3b3o$10bo$6b4ob2o2bo4bobo4bo$10bobo2bo4bobo4bo
+$10bo4bo4bobo4bo$10bo6b3o3b3o$10bo$17b3o3b3o$15bo4bobo4bo$15bo4bobo4bo$15bo4b
+obo4bo2$17b3o3b3o!

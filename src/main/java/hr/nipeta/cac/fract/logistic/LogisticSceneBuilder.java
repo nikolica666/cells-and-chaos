@@ -57,7 +57,7 @@ public class LogisticSceneBuilder extends SceneBuilder {
                 timerControl.getStopButton(),
                 createButton("Step", event -> evolveAndDraw()),
                 timerControl.getDurationInput(),
-                createButton("Main menu", e -> createScene(() -> new WelcomeSceneBuilder(main)))
+                createSceneChangePopupButton()
         );
     }
 

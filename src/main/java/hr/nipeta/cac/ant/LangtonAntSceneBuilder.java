@@ -7,14 +7,12 @@ import hr.nipeta.cac.model.IntCoordinates;
 import hr.nipeta.cac.model.gui.CounterLabelGuiControl;
 import hr.nipeta.cac.model.gui.PeriodicAnimationTimer;
 import hr.nipeta.cac.model.gui.PeriodicAnimationTimerGuiControl;
-import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
@@ -33,11 +31,11 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
     private static final int GRID_SIZE_X = 256;
     private static final int GRID_SIZE_Y = 128;
 
-    private static LangtonAntLogic antLogic;
-
-    private static final double RECT_SIZE = 11;
+    private static final double RECT_SIZE = 9;
     private static final double RECT_BORDER_WIDTH = 0;
     private static final double RECT_TOTAL_SIZE = RECT_SIZE + RECT_BORDER_WIDTH;
+
+    private static LangtonAntLogic antLogic;
 
     private String antRules;
     private TextField antRulesInput;
@@ -45,8 +43,6 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
     private PeriodicAnimationTimerGuiControl timerControl;
 
     private CounterLabelGuiControl countControl;
-//    private long counter;
-//    private Label counterLabel;
 
     private GraphicsContext gc;
 
@@ -67,7 +63,7 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
         timerControl = PeriodicAnimationTimerGuiControl.of(PeriodicAnimationTimer.every(20).execute(this::evolveAndDraw));
         countControl = CounterLabelGuiControl.of("Steps: ");
 
-        Region parent = new VBox(10, mainMenu(), antGridWrapped());
+        Region parent = new VBox(10, mainMenu(), antGridWrapped(), countControl);
         parent.setPadding(new Insets(10));
         return new Scene(parent);
 
@@ -80,8 +76,7 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
                 stepButton(),
                 timerControl.getDurationInput(),
                 antRulesInput,
-                countControl,
-                welcomeScreenButton()
+                createSceneChangePopupButton()
         );
     }
 
@@ -110,12 +105,6 @@ public class LangtonAntSceneBuilder extends SceneBuilder {
         drawGrid(gc);
         countControl.reset();
 
-    }
-
-    private Button welcomeScreenButton() {
-        return createButton(
-                "Main menu",
-                e -> createScene(() -> new WelcomeSceneBuilder(main)));
     }
 
     private Node antGridWrapped() {

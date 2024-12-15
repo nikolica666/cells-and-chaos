@@ -7,16 +7,17 @@ import hr.nipeta.cac.gol.count.NeighbourCountWrap;
 import hr.nipeta.cac.gol.file.parser.GolFileParserFactory;
 import hr.nipeta.cac.gol.file.parser.GolFileParserResult;
 import hr.nipeta.cac.gol.model.GolCellState;
-import hr.nipeta.cac.gol.rules.*;
-import hr.nipeta.cac.model.Coordinates;
+import hr.nipeta.cac.gol.rules.GolConwayRules;
+import hr.nipeta.cac.gol.rules.GolCustomRules;
+import hr.nipeta.cac.gol.rules.GolRules;
 import hr.nipeta.cac.model.IntCoordinates;
 import hr.nipeta.cac.model.RectangularGrid;
 import hr.nipeta.cac.model.gui.PercentLabelGuiControl;
 import hr.nipeta.cac.model.gui.PeriodicAnimationTimer;
 import hr.nipeta.cac.model.gui.PeriodicAnimationTimerGuiControl;
-import hr.nipeta.cac.welcome.WelcomeSceneBuilder;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -24,9 +25,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
@@ -39,7 +38,6 @@ import javafx.stage.Popup;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +63,7 @@ public class GolSceneBuilder extends SceneBuilder {
     private int lastToggledScreenRow;
     private int lastToggledScreenCol;
 
+    private Group canvasContainer;
     private Canvas canvas;
     private double scaleFactor = 1.0;
 
@@ -87,13 +86,14 @@ public class GolSceneBuilder extends SceneBuilder {
         // Get the visual bounds (usable screen area, excluding taskbar, etc.)
         javafx.geometry.Rectangle2D visualBounds = screen.getVisualBounds();
 
-        double cellSize = 1;
+        double cellSize = 10;
+        double cellBorder = 1;
 
         rectangularGrid = RectangularGrid.of(
-                (int) ((visualBounds.getHeight() - 400) / cellSize),
-                (int) ((visualBounds.getWidth() - 300) / cellSize),
+                (int) ((visualBounds.getHeight() - 200) / (cellSize + cellBorder)),
+                (int) ((visualBounds.getWidth() - 100) / (cellSize + cellBorder)),
                 cellSize,
-                1);
+                cellBorder);
         logic = new GolLogic(rectangularGrid.getCols(), rectangularGrid.getRows(), new GolConwayRules(), new NeighbourCountWrap());
 
         timerControl = PeriodicAnimationTimerGuiControl.of(PeriodicAnimationTimer.every(125).execute(this::evolveAndDrawGrid));
@@ -119,9 +119,6 @@ public class GolSceneBuilder extends SceneBuilder {
 
     private Node patternsPopup() {
 
-        Button showPopupButton = new Button("Patterns");
-        Label resultLabel = new Label("Your choice: None");
-
         Popup popup = new Popup();
         popup.setAutoHide(true);
 
@@ -130,28 +127,13 @@ public class GolSceneBuilder extends SceneBuilder {
         popupContent.setStyle("-fx-background-color: #ffffff; -fx-border-color: #cccccc; -fx-border-radius: 5px; -fx-background-radius: 5px;");
 
         Label promptLabel = new Label("Choose an option:");
-        Button option1 = new Button("Option 1");
-        Button option2 = new Button("Option 2");
-
-        option1.setOnAction(e -> {
-            resultLabel.setText("Your choice: Option 1");
-            popup.hide();
-        });
-
-        option2.setOnAction(e -> {
-            resultLabel.setText("Your choice: Option 2");
-            popup.hide();
-        });
 
         popupContent.getChildren().addAll(promptLabel, testScrollSelection(), patternFileUpload());
         popupContent.setAlignment(Pos.CENTER);
 
-        // Add content to the Popup
         popup.getContent().add(popupContent);
 
-        showPopupButton.setOnAction(e -> popup.show(main.getPrimaryStage()));
-
-        return showPopupButton;
+        return createButton("Patterns", e -> popup.show(main.getPrimaryStage()));
 
     }
 
@@ -325,7 +307,7 @@ public class GolSceneBuilder extends SceneBuilder {
                 neighbourCountSelector(),
                 patternsPopup(),
                 displayPopup(),
-                welcomeScreenButton()
+                createSceneChangePopupButton()
         );
     }
 
@@ -414,7 +396,7 @@ public class GolSceneBuilder extends SceneBuilder {
         rulesSelector.setTooltip(
                 createTooltip("""
                         Born/Survive rules e.g. B2/S45 = Born if 2 neighbours, Survive if 4 or 5\r\n
-                        (classical rule is 'Conway' B3/S23 - born when 3 live neighbours, 
+                        (classical rule is 'Conway' B3/S23 - born when 3 live neighbours,\s
                         survive if 2 or 3 live neighbours)\r\n
                         It is possible to type in custom rule"""));
         rulesSelector.setOnAction(e -> {
@@ -461,17 +443,11 @@ public class GolSceneBuilder extends SceneBuilder {
 
     }
 
-    private Button welcomeScreenButton() {
-        return createButton(
-                "Main menu",
-                e -> createScene(() -> new WelcomeSceneBuilder(main)));
-    }
-
     private Node zoomableCanvas(double canvasWidth, double canvasHeight) {
 
         initCanvasGrid(canvasWidth, canvasHeight);
 
-        StackPane canvasContainer = new StackPane(canvas);
+        canvasContainer = new Group(canvas);
 
         // Add zoom functionality
         canvas.setOnScroll((ScrollEvent event) -> {
@@ -525,26 +501,47 @@ public class GolSceneBuilder extends SceneBuilder {
 
     }
 
+    final double[] lastMouseX = {0};
+    final double[] lastMouseY = {0};
+
     private void handleMousePressed(MouseEvent e, GraphicsContext gc) {
 
-        int col = (int)(e.getX() / rectangularGrid.getCellSizeWithBorder());
-        int row = (int)(e.getY() / rectangularGrid.getCellSizeWithBorder());
+        if (e.isPrimaryButtonDown()) {
+            int col = (int)(e.getX() / rectangularGrid.getCellSizeWithBorder());
+            int row = (int)(e.getY() / rectangularGrid.getCellSizeWithBorder());
 
-        if (col >= 0 && col < rectangularGrid.getCols() && row >= 0 && row < rectangularGrid.getRows()) {
-            toggleCell(row, col, gc);
+            if (col >= 0 && col < rectangularGrid.getCols() && row >= 0 && row < rectangularGrid.getRows()) {
+                toggleCell(row, col, gc);
+            }
+        } else if (e.isSecondaryButtonDown()) {
+            lastMouseX[0] = e.getSceneX();
+            lastMouseY[0] = e.getSceneY();
         }
 
     }
 
     private void handleMouseDragged(MouseEvent e, GraphicsContext gc) {
 
-        int col = (int)(e.getX() / rectangularGrid.getCellSizeWithBorder());
-        int row = (int)(e.getY() / rectangularGrid.getCellSizeWithBorder());
+        if (e.isPrimaryButtonDown()) {
+            int col = (int)(e.getX() / rectangularGrid.getCellSizeWithBorder());
+            int row = (int)(e.getY() / rectangularGrid.getCellSizeWithBorder());
 
-        if (col >= 0 && col < rectangularGrid.getCols() && row >= 0 && row < rectangularGrid.getRows()) {
-            if (lastToggledScreenRow != row || lastToggledScreenCol != col) {
-                toggleCell(row, col, gc);
+            if (col >= 0 && col < rectangularGrid.getCols() && row >= 0 && row < rectangularGrid.getRows()) {
+                if (lastToggledScreenRow != row || lastToggledScreenCol != col) {
+                    toggleCell(row, col, gc);
+                }
             }
+        } else if (e.isSecondaryButtonDown()) {
+            double deltaX = e.getSceneX() - lastMouseX[0];
+            double deltaY = e.getSceneY() - lastMouseY[0];
+
+            // Shift the canvas
+            canvasContainer.setTranslateX(canvasContainer.getTranslateX() + deltaX);
+            canvasContainer.setTranslateY(canvasContainer.getTranslateY() + deltaY);
+
+            // Update the last mouse position
+            lastMouseX[0] = e.getSceneX();
+            lastMouseY[0] = e.getSceneY();
         }
 
     }

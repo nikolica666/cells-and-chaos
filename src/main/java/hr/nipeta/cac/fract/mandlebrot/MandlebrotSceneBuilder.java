@@ -69,16 +69,10 @@ public class MandlebrotSceneBuilder extends SceneBuilder {
 
         StackPane stackedCanvas = new StackPane(fractalCanvas, tooltipCanvas);
 
-        Region parent = new VBox(10, mainMenu(), stackedCanvas);
+        Region parent = new VBox(10, createSceneChangePopupButton(), stackedCanvas);
         parent.setPadding(new Insets(10));
         return new Scene(parent);
 
-    }
-
-    private Node mainMenu() {
-        return horizontalMenu(
-                welcomeScreenButton()
-        );
     }
 
     private Button welcomeScreenButton() {
